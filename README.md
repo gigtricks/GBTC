@@ -1,7 +1,7 @@
 # Project Template
 
 ## Content:
-Project template for solidity projects
+ICO Smart Contract templates
 
 ## Features/Rules:
 1. Contract expects certain version of compiler

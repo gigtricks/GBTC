@@ -1,7 +1,7 @@
 {
-  "name": "project-template",
+  "name": "smart-contract-templates",
   "version": "1.0.0",
-  "description": "Project templatge",
+  "description": "Smart Contract templates",
   "homepage": "https://bitbucket.org/applicature/solidity.project-template#readme",
   "license": "UNLICENSED",
   "keywords": [
@@ -12,17 +12,17 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://bitbucket.org/applicature/solidity.project-template.git"
+    "url": "git+https://bitbucket.org/applicature/solidity.smart-contract-templates.git"
   },
-  "author": "Rafael Kyrdan <raphael.kyrdan@applicature.com> (https://github.com/rafaelkyrdan)",
+  "author": "Andrew Zubko <andrew@applicature.com>",
   "engines": {
     "node": ">=8.0.0"
   },
   "scripts": {
-    "lint": "node ./node_modules/solhint/solhint.js contracts/*.sol",
+    "lint": "npm run solhint",
     "ganache": "ganache-cli > /dev/null 2>&1 &",
-    "develop": "truffle develop",
     "test": "truffle test",
+    "develop": "truffle develop",
     "compile": "truffle compile",
     "coverage": "./node_modules/.bin/solidity-coverage",
     "migrate": "truffle migrate --network development",
@@ -35,6 +35,7 @@
     "test": "test"
   },
   "dependencies": {
+    "minimetoken": "^0.2.0",
     "truffle": "4.0.5",
     "zeppelin-solidity": "^1.7.0"
   },

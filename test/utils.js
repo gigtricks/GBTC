@@ -8,7 +8,6 @@ function receiptShouldSucceed(result) {
 
         if(result.receipt.gasUsed == gasToUse) {
             try {
-               console.log(result.receipt.gasUsed, gasToUse);
                 assert.notEqual(result.receipt.gasUsed, gasToUse, "tx failed, used all gas");
             }
             catch(err) {
@@ -74,91 +73,6 @@ function balanceShouldEqualTo(instance, address, expectedBalance, notCall) {
     });
 }
 
-function totalShouldEqualTo(instance, expected) {
-    return new Promise(function(resolve, reject) {
-        var promise;
-
-        promise = instance.totalSupply();
-
-        promise.then(function(amount) {
-            try {
-                assert.equal(amount.valueOf(), expected, "total is not equal");
-            }
-            catch(err) {
-                reject(err);
-
-                return;
-            }
-
-            resolve();
-        });
-    });
-}
-
-function mintedShouldEqualTo(instance, expected) {
-    return new Promise(function(resolve, reject) {
-        var promise;
-
-        promise = instance.minted();
-
-        promise.then(function(amount) {
-            try {
-                assert.equal(amount.valueOf(), expected, "minted is not equal");
-            }
-            catch(err) {
-                reject(err);
-
-                return;
-            }
-
-            resolve();
-        });
-    });
-}
-
-function tokenMetaDataShouldExists(instance, tokenId) {
-    return new Promise(function(resolve, reject) {
-        var promise;
-
-        promise = instance.tokenMetadata(tokenId);
-
-        promise.then(function(res) {
-            try {
-               var lengthBiggerThenZero = res.length > 0;
-               assert.equal(lengthBiggerThenZero, true, "meta data is not exists");
-            }
-            catch(err) {
-                reject(err);
-
-                return;
-            }
-
-            resolve();
-        });
-    });
-}
-
-function shouldTakeTokenByIndex(instance, address, index, expected) {
-    return new Promise(function(resolve, reject) {
-        var promise;
-
-        promise = instance.tokenOfOwnerByIndex(address, index);
-
-        promise.then(function(res) {
-            try {
-               assert.equal(res.valueOf(), expected, "expected tokenId is not equal");
-            }
-            catch(err) {
-                reject(err);
-
-                return;
-            }
-
-            resolve();
-        });
-    });
-}
-
 function getDividend(instance, id) {
     return instance.dividends.call(id)
         .then(function(obj) {
@@ -202,7 +116,7 @@ function checkDividend(dividend, id, amount, claimedAmount, transferedBack, tota
 
 function getEmission(instance, id) {
     "use strict";
-
+    
     return instance.emissions.call(id)
         .then(function(obj) {
             return {
@@ -252,7 +166,7 @@ function getPhase(instance, id) {
                     maxAmount: obj[2].valueOf(),
                 }
             }
-
+            
             return {
                 price: obj[0].valueOf(),
                 maxAmount: obj[1].valueOf(),
@@ -298,15 +212,257 @@ function getTxCost(result) {
     return result.receipt.gasUsed * tx.gasPrice;
 }
 
+async function timeJump(seconds) {
+    return new Promise(function(resolve, reject) {
+        web3.currentProvider.sendAsync({
+                jsonrpc: "2.0",
+                method: "evm_increaseTime",
+                params: [ seconds ],
+                id: new Date().getTime(),
+            },
+            function(error) {
+                if (error) {
+                    return reject(error);
+                }
+
+                web3.currentProvider.sendAsync(
+                    {
+                        jsonrpc: "2.0",
+                        method: "evm_mine",
+                        params: [],
+                        id: new Date().getTime(),
+                    },
+                    (err2) => {
+                        if (err2) return reject(err2);
+                        resolve();
+                    },
+                );
+            },
+        );
+    });
+}
+
+async function sendTransaction(contract, from, value, data, shouldFail) {
+    try {
+        await contract.sendTransaction({ from, value, data });
+
+        if(shouldFail) {
+            assert.fail("sendTransaction succeed");
+        }
+    }
+    catch(err) {
+        if(err.constructor.name == "AssertionError") {
+            throw err;
+        }
+
+        if(!shouldFail) {
+            throw err;
+        }
+    }
+}
+
+async function transferERC20(contract, from, to, tokens, shouldFail) {
+    try {
+        await contract.transfer(to, tokens, { from });
+
+        if(shouldFail) {
+            assert.fail("erc20 transfer succeed");
+        }
+    }
+    catch(err) {
+        if(err.constructor.name == "AssertionError") {
+            throw err;
+        }
+
+        if(!shouldFail) {
+            throw err;
+        }
+    }
+}
+
+async function balanceERC20(contract, holder, balance) {
+    assert.equal(await contract.balanceOf(holder), balance, "erc20 balance is not equal");
+}
+
+async function testTransferFrom(contract, granter, grantee, to, tokens) {
+    const granterBeforeBalance = await contract.balanceOf(granter);
+    const granteeBeforeBalance = await contract.balanceOf(grantee);
+
+    await contract.approve(grantee, tokens, { from: granter });
+
+    // try to transfer more than allowed
+
+    let trasnferFromResponse = await contract.transferFrom.call(granter, to, tokens + 1, {from: grantee});
+
+    assert.equal(trasnferFromResponse.valueOf(), false, "transferFrom with exceding amount succeed");
+
+    await contract.transferFrom(granter, to, tokens + 1, { from: grantee });
+
+    await checkState({ contract }, {
+        contract: {
+            balanceOf: [
+                {[granter]: granterBeforeBalance},
+                {[grantee]: granteeBeforeBalance}
+            ],
+            allowance: {
+                __val: tokens,
+                _owner: granter,
+                _spender: grantee
+            }
+        }
+    });
+
+    // try to transfer less than allowed
+    transferFromResponse = await contract.transferFrom.call(granter, to, tokens / 2, { from: grantee });
+
+    assert.equal(transferFromResponse, true, "transferFrom with lower amount failed");
+    await contract.transferFrom(granter, to, tokens / 2, { from: grantee });
+    
+    await checkState({ contract }, {
+        contract: {
+            balanceOf: [
+                { [granter]: new BigNumber(granterBeforeBalance).sub(new BigNumber(tokens).div(2)).valueOf() },
+                { [to]: new BigNumber(granteeBeforeBalance).add(new BigNumber(tokens).div(2)).valueOf() }
+            ],
+
+            allowance: {
+                __val: new BigNumber(tokens).sub(new BigNumber(tokens).div(2)).valueOf(),
+                _owner: granter,
+                _spender: grantee
+            }
+        }
+    });
+}
+
+async function checkStateMethod(contract, contractId, stateId, args) {
+    if(Array.isArray(args)) {
+        for(let item of args) {
+            await checkStateMethod(contract, contractId, stateId, item);
+        }
+    }
+    else if(typeof args == "object" && args.constructor.name != "BigNumber") {
+        const keys = Object.keys(args);
+
+        if(keys.length == 1) {
+            const val = (await contract[stateId].call(keys[0])).valueOf();
+
+            assert.equal(val, args[keys[0]],
+                `Contract ${contractId} state ${stateId} with arg ${keys[0]} & value ${val} is not equal to ${args[keys[0]]}`);
+
+            return;
+        }
+
+        const passArgs = [];
+
+        if(! args.hasOwnProperty("__val")) {
+            assert.fail(new Error("__val is not present"));
+        }
+
+        for(let arg of Object.keys(args)) {
+            if(arg == "__val") {
+                continue;
+            }
+
+            passArgs.push(args[arg]);
+        }
+
+        const val = (await contract[stateId].call( ...passArgs )).valueOf();
+        
+        assert.equal(val, args["__val"], `Contract ${contractId} state ${stateId} with value ${val} is not equal to ${args['__val']}`);
+    }
+    else {
+        const val = (await contract[stateId].call()).valueOf();
+
+        assert.equal(val, args, `Contract ${contractId} state ${stateId} with value ${val} is not equal to ${args.valueOf()}`);
+    }
+}
+
+async function checkState(contracts, states) {
+    for(let contractId in states) {
+        if(! contracts.hasOwnProperty(contractId)) {
+            assert.fail("no such contract " + contractId);
+        }
+
+        let contract = contracts[contractId];
+
+        for(let stateId in states[contractId]) {
+            if(! contract.hasOwnProperty(stateId)) {
+                assert.fail("no such property " + stateId);
+            }
+
+            await checkStateMethod(contract, contractId, stateId, states[contractId][stateId]);
+        }
+    }
+}
+
+async function shouldFail(call) {
+    try {
+        await call;
+
+        assert.fail("call succeed");
+    }
+    catch(err) {
+        if(err.constructor.name == "AssertionError") {
+            throw err;
+        }
+    }
+}
+/*
+async function getDividendData(instance, account, id) {
+    return instance.accounts[account].call(id)
+        .then(function(obj) {
+            return {
+                period: obj[0].valueOf(),
+                day: obj[1].valueOf(),
+                balance: obj[2].valueOf(),
+            }
+        });
+}
+
+async function checkDividendData(dividend, period, day, balance) {
+    return new Promise(function(resolve, reject) {
+        try {
+            assert.equal(dividend.period, period, "period is not equal");
+            assert.equal(dividend.day, day, "day is not equal");
+            assert.equal(dividend.balance, balance, "balance is not equal");
+
+            resolve();
+        }
+        catch(err) {
+            reject(err);
+        }
+    });
+}
+*/
+// async function getFundsData(instance, id) {
+//     return instance.funds.call(id)
+//         .then(function(obj) {
+//             return {
+//                 period: obj[0].valueOf(),
+//                 totalEthers: obj[1].valueOf(),
+//             }
+//         });
+// }
+//
+// async function checkFundsData(dividend, period, totalEthers, totalTokens) {
+//     return new Promise(function(resolve, reject) {
+//         try {
+//             assert.equal(dividend.period, period, "period is not equal");
+//             assert.equal(dividend.totalEthers, totalEthers, "totalEthers is not equal");
+//
+//             resolve();
+//         }
+//         catch(err) {
+//             reject(err);
+//         }
+//     });
+// }
+
 module.exports = {
     receiptShouldSucceed: receiptShouldSucceed,
     receiptShouldFailed: receiptShouldFailed,
     catchReceiptShouldFailed: catchReceiptShouldFailed,
     balanceShouldEqualTo: balanceShouldEqualTo,
-    totalShouldEqualTo: totalShouldEqualTo,
-    mintedShouldEqualTo: mintedShouldEqualTo,
-    tokenMetaDataShouldExists: tokenMetaDataShouldExists,
-    shouldTakeTokenByIndex: shouldTakeTokenByIndex,
     getDividend: getDividend,
     checkDividend: checkDividend,
     getPhase: getPhase,
@@ -317,5 +473,29 @@ module.exports = {
     timeout: timeout,
     getEtherBalance: getEtherBalance,
     checkEtherBalance: checkEtherBalance,
-    getTxCost: getTxCost
+    getTxCost: getTxCost,
+    timeJump: timeJump,
+
+    sendTransaction: sendTransaction,
+
+    checkState: checkState,
+
+    shouldFail: shouldFail,
+
+    // erc20
+    erc20: {
+        transfer: transferERC20,
+        balanceShouldEqualTo: balanceERC20,
+        test: {
+            transferFrom: testTransferFrom
+        }
+    },
+    // getDividendData: getDividendData,
+    // checkDividendData: checkDividendData,
+    // getFundsData: getFundsData,
+
+    // checkFundsData: checkFundsData
 };
+
+// 21759711541658620174
+// 22485035259713907513

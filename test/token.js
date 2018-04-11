@@ -1,4 +1,4 @@
-var Token = artifacts.require("../contracts/TokenERC20.sol");
+var Token = artifacts.require("../contracts/GigERC20.sol");
 var Utils = require("./utils");
 
 var BigNumber = require('bignumber.js');
@@ -9,12 +9,14 @@ contract('Token', function(accounts) {
   it("deploy & check for total supply", function() {
      var instance;
 
-     return Token.new(
-             "Token",
-             "T",
-             18,
-             1000000
-         ).then(function(_instance) {
+      return Token.new(
+          1000000,
+          "Token",
+          18,
+          "T",
+          true,
+          false
+      ).then(function (_instance) {
              instance = _instance;
          })
      .then(() => Utils.balanceShouldEqualTo(instance, accounts[0], 1000000));
@@ -24,11 +26,13 @@ contract('Token', function(accounts) {
       var instance;
 
       return Token.new(
-              "Token",
-               "T",
-               18,
-               1000000
-      ).then(function(_instance) {
+          1000000,
+          "Token",
+          18,
+          "T",
+          true,
+          false
+      ).then(function (_instance) {
           instance = _instance;
       })
       .then(function() {
@@ -43,11 +47,13 @@ contract('Token', function(accounts) {
       var instance;
 
       return Token.new(
-              "Token",
-               "T",
-               18,
-               1000000
-      ).then(function(_instance) {
+          1000000,
+          "Token",
+          18,
+          "T",
+          true,
+          false
+      ).then(function (_instance) {
           instance = _instance;
       })
       .then(function() {
@@ -77,11 +83,13 @@ contract('Token', function(accounts) {
       var instance;
 
       return Token.new(
-              "Token",
-               "T",
-               18,
-               1000000
-      ).then(function(_instance) {
+          1000000,
+          "Token",
+          18,
+          "T",
+          true,
+          false
+      ).then(function (_instance) {
           instance = _instance;
       })
       .then(() => Utils.balanceShouldEqualTo(instance, accounts[0], 1000000))
@@ -102,11 +110,13 @@ contract('Token', function(accounts) {
       var instance;
 
       return Token.new(
-              "Token",
-               "T",
-               18,
-               1000000
-      ).then(function(_instance) {
+          1000000,
+          "Token",
+          18,
+          "T",
+          true,
+          false
+      ).then(function (_instance) {
           instance = _instance;
       })
       .then(() => Utils.balanceShouldEqualTo(instance, accounts[0], 1000000))

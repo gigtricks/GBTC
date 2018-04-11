@@ -4,6 +4,11 @@
     "avoid-throw": false,
     "avoid-suicide": "error",
     "avoid-sha3": "warn",
-    "indent": ["warn", 4]
+    "indent": ["warn", 4],
+    "compiler-fixed": false,
+    "not-rely-on-time": false,
+    "quotes": ["error", "single"],
+    "no-empty-blocks": false,
+    "no-complex-fallback": false
   }
 }

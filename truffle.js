@@ -14,10 +14,10 @@ module.exports = {
       gasPrice: 0x01      // <-- Use this low gas price
     },
   },
-  mocha: {
-    reporter: 'mocha-multi-reporters',
-    reporterOptions: {
-        configFile: 'mocha-config.json'
-    }
-  }
+  // mocha: {
+  //   reporter: 'mocha-multi-reporters',
+  //   reporterOptions: {
+  //       configFile: 'mocha-config.json'
+  //   }
+  // }
 };

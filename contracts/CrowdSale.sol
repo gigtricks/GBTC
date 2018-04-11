@@ -1,0 +1,369 @@
+pragma solidity 0.4.19;
+
+import "./SellableToken.sol";
+//import "./PrivateSale.sol";
+
+
+contract CrowdSale is SellableToken {
+    uint8 public constant PRE_ICO_TIER_FIRST = 0;
+    uint8 public constant PRE_ICO_TIER_LAST = 4;
+    uint8 public constant ICO_TIER_FIRST = 5;
+    uint8 public constant ICO_TIER_LAST = 12;
+
+    SellableToken public privateSale;
+
+    uint256 public price;
+
+    Stats public preICOStats;
+    mapping (address => uint256) public icoBalances;
+
+    struct Stats {
+        uint256 soldTokens;
+        uint256 collectedUSD;
+        uint256 collectedEthers;
+        bool burned;
+    }
+
+
+    function CrowdSale(
+        address _token,
+        address _etherHolder,
+        uint256 _maxTokenSupply,
+        uint256 _price,
+        uint256 _startTime,
+        uint256 _endTime,
+        uint256 _etherPriceInUSD
+    ) public
+    SellableToken(
+        _token,
+        _etherHolder,
+        _startTime,
+        _endTime,
+        _maxTokenSupply,
+         _etherPriceInUSD
+    ) {
+        softCap = 500000000000;
+        hardCap = 5010477900000;
+        price = _price;
+        //0.2480* 10^5
+        //PreICO
+        tiers.push(
+            Tier(
+                uint256(65),
+                _startTime,
+                _startTime.add(1 hours)
+            )
+        );
+        tiers.push(
+            Tier(
+                uint256(60),
+                _startTime.add(1 hours),
+                _startTime.add(1 days)
+            )
+        );
+        tiers.push(
+            Tier(
+                uint256(57),
+                _startTime.add(1 days),
+                _startTime.add(2 days)
+            )
+        );
+        tiers.push(
+            Tier(
+                uint256(55),
+                _startTime.add(2 days),
+                _startTime.add(3 days)
+            )
+        );
+        tiers.push(
+            Tier(
+                uint256(50),
+                _startTime.add(3 days),
+                _startTime.add(30 days)
+            )
+        );
+        //ICO
+        tiers.push(
+            Tier(
+                uint256(25),
+                _startTime.add(30 days),
+                _startTime.add(30 days).add(1 weeks)
+            )
+        );
+        tiers.push(
+        Tier(
+        uint256(15),
+        _startTime.add(30 days).add(1 weeks),
+        _startTime.add(30 days).add(2 weeks)
+        )
+        );
+        tiers.push(
+            Tier(
+                uint256(10),
+                _startTime.add(30 days).add(2 weeks),
+                _startTime.add(30 days).add(3 weeks)
+            )
+        );
+        tiers.push(
+            Tier(
+                uint256(6),
+                _startTime.add(30 days).add(3 weeks),
+                _startTime.add(30 days).add(4 weeks)
+            )
+        );
+        tiers.push(
+            Tier(
+                uint256(4),
+                _startTime.add(30 days).add(4 weeks),
+                _startTime.add(30 days).add(5 weeks)
+            )
+        );
+        tiers.push(
+            Tier(
+                uint256(2),
+                _startTime.add(30 days).add(5 weeks),
+                _startTime.add(30 days).add(6 weeks)
+            )
+        );
+        tiers.push(
+            Tier(
+                uint256(0),
+                _startTime.add(30 days).add(6 weeks),
+                _startTime.add(30 days).add(7 weeks)
+            )
+        );
+        tiers.push(
+            Tier(
+                uint256(0),
+                _startTime.add(30 days).add(7 weeks),
+                    _endTime
+            )
+        );
+    }
+
+    function changeICODates(uint8 _tierId, uint256 _start, uint256 _end) public onlyOwner {
+        if (_start != 0 && _start < _end && _tierId < tiers.length) {
+            Tier storage icoTier = tiers[_tierId];
+            icoTier.startTime = _start;
+            icoTier.endTime = _end;
+            if (_tierId == PRE_ICO_TIER_FIRST) {
+                startTime = _start;
+            } else if (_tierId == ICO_TIER_LAST) {
+                endTime = _end;
+            }
+        }
+    }
+
+    function isActive() public view returns (bool) {
+        if (hardCap == collectedUSD) {
+            return false;
+        }
+        if (soldTokens == maxTokenSupply) {
+            return false;
+        }
+
+        return withinPeriod();
+    }
+
+    function withinPeriod() public view returns (bool) {
+        return getActiveTier() != tiers.length;
+    }
+
+    function setPrivateSale(address _privateSale) public onlyOwner {
+        if (_privateSale != address(0)) {
+            privateSale = SellableToken(_privateSale);
+        }
+    }
+
+    function getActiveTier() public view returns (uint8) {
+        for (uint8 i = 0; i < tiers.length; i++) {
+            if (block.timestamp >= tiers[i].startTime && block.timestamp <= tiers[i].endTime) {
+                return i;
+            }
+        }
+
+        return uint8(tiers.length);
+    }
+
+    function calculateTokensAmount(uint256 _value) public view returns (uint256 tokenAmount, uint256 usdAmount) {
+        if (_value == 0) {
+            return (0, 0);
+        }
+        uint8 activeTier = getActiveTier();
+
+        if (activeTier == tiers.length) {
+            if (endTime < block.timestamp) {
+                return (0, 0);
+            }
+            if (startTime > block.timestamp) {
+                activeTier = PRE_ICO_TIER_FIRST;
+            }
+        }
+        usdAmount = _value.mul(etherPriceInUSD);
+        tokenAmount = usdAmount.div(price);
+        usdAmount = usdAmount.div(uint256(10) ** 18);
+        if (usdAmount < minPurchase) {
+            return (0, 0);
+        }
+        tokenAmount = tokenAmount.mul(uint256(100).add(tiers[activeTier].discount)).div(uint256(100));
+    }
+
+    function calculateEthersAmount(uint256 _tokens) public view returns (uint256 ethers, uint256 discount) {
+        if (_tokens == 0 || _tokens < minPurchase) {
+            return (0, 0);
+        }
+
+        uint8 activeTier = getActiveTier();
+
+        if (activeTier == tiers.length) {
+            if (endTime < block.timestamp) {
+                return (0, 0);
+            }
+            if (startTime > block.timestamp) {
+                activeTier = PRE_ICO_TIER_FIRST;
+            }
+        }
+
+        ethers = _tokens.mul(price).div(etherPriceInUSD);
+        discount = _tokens.mul(tiers[activeTier].discount).div(100);
+    }
+
+    function getStats(uint256 _ethPerBtc, uint256 _ethPerLtc) public view returns (
+        uint256 sold,
+        uint256 maxSupply,
+        uint256 min,
+        uint256 soft,
+        uint256 hard,
+        uint256 tokenPrice,
+        uint256[3] tokensAmounts,
+        uint256[39] tiersData
+    ) {
+        sold = soldTokens;
+        maxSupply = maxTokenSupply;
+        min = minPurchase;
+        soft = softCap;
+        hard = hardCap;
+        tokenPrice = price;
+        uint256 usd;
+        (tokensAmounts[0], usd) = calculateTokensAmount(1 ether);
+        (tokensAmounts[1], usd) = calculateTokensAmount(_ethPerBtc);
+        (tokensAmounts[2], usd) = calculateTokensAmount(_ethPerLtc);
+        uint256 j = 0;
+        for (uint256 i = 0; i < tiers.length; i++) {
+            tiersData[j++] = uint256(tiers[i].discount);
+            tiersData[j++] = uint256(tiers[i].startTime);
+            tiersData[j++] = uint256(tiers[i].endTime);
+        }
+    }
+
+    function burnUnsoldTokens() public onlyOwner {
+        if (block.timestamp >= endTime && maxTokenSupply > soldTokens) {
+            token.burnUnsoldTokens(maxTokenSupply.sub(soldTokens));
+            maxTokenSupply = soldTokens;
+        }
+    }
+
+    function isTransferAllowed(address _from, uint256 _value) public view returns (bool status){
+        uint8 activeTier = getActiveTier();
+        if (activeTier == tiers.length) {
+            return false;
+        }
+        if (activeTier >= PRE_ICO_TIER_FIRST && activeTier <= PRE_ICO_TIER_LAST) {
+            return true;
+        }
+        if(collectedUSD < softCap){
+            if(token.balanceOf(_from) - icoBalances[_from] >_value){
+                return true;
+            }
+            return false;
+        }
+        return true;
+    }
+
+    function isRefundPossible() public view returns (bool) {
+        if (isActive() || block.timestamp < startTime || collectedUSD >= softCap) {
+            return false;
+        }
+        return true;
+    }
+
+    function refund() public returns (bool) {
+        if (!isRefundPossible() || etherBalances[msg.sender] == 0) {
+            return false;
+        }
+
+        msg.sender.transfer(etherBalances[msg.sender]);
+        uint256 burnedAmount = token.burnInvestorTokens(msg.sender);
+        if (burnedAmount == 0) {
+            return false;
+        }
+
+        Refund(msg.sender, etherBalances[msg.sender], burnedAmount);
+        etherBalances[msg.sender] = 0;
+
+        return true;
+    }
+
+    function transferEthers() internal {
+        if (collectedUSD >= softCap) {
+            etherHolder.transfer(this.balance);
+        }
+    }
+
+    function setMaxTokenSupply(uint256 _amount) public {
+        if (msg.sender == address(privateSale)) {
+            maxTokenSupply = _amount;
+        }
+    }
+
+    function mintPreICO(address _address, uint256 _tokenAmount, uint256 _ethAmount, uint256 _usdAmount) internal returns (uint256) {
+        uint256 mintedAmount = token.mint(_address, _tokenAmount);
+
+        require(mintedAmount == _tokenAmount);
+
+        preICOStats.soldTokens = preICOStats.soldTokens.add(_tokenAmount);
+        preICOStats.collectedEthers = preICOStats.collectedEthers.add(_ethAmount);
+        preICOStats.collectedUSD = preICOStats.collectedUSD.add(_usdAmount);
+
+        require(maxTokenSupply >= preICOStats.soldTokens);
+
+        return _tokenAmount;
+    }
+
+    function buy(address _address, uint256 _value) internal returns (bool) {
+        if (_value == 0 || _address == address(0)) {
+            return false;
+        }
+
+        uint8 activeTier = getActiveTier();
+        if (activeTier == tiers.length) {
+            return false;
+        }
+
+        uint256 tokenAmount;
+        uint256 usdAmount;
+        uint256 mintedAmount;
+
+        (tokenAmount, usdAmount) = calculateTokensAmount(_value);
+
+        if (activeTier >= PRE_ICO_TIER_FIRST && activeTier <= PRE_ICO_TIER_LAST) {
+            mintedAmount = mintPreICO(_address, tokenAmount, _value, usdAmount);
+
+            require(usdAmount > 0 && mintedAmount > 0);
+            etherHolder.transfer(this.balance);
+        } else {
+            mintedAmount = mintInternal(_address, tokenAmount);
+            collectedUSD = collectedUSD.add(usdAmount);
+            require(hardCap >= collectedUSD && usdAmount > 0 && mintedAmount > 0);
+
+            transferEthers();
+            collectedEthers = collectedEthers.add(_value);
+            etherBalances[_address] = etherBalances[_address].add(_value);
+            icoBalances[_address] = icoBalances[_address].add(_value);
+        }
+
+        Contribution(_address, _value, tokenAmount);
+
+        return true;
+    }
+}
