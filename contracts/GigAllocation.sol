@@ -76,25 +76,29 @@ contract GigAllocation is Ownable {
 
     function sendEcosystemIncentiveTokens() public onlyOwner {
         if (false == ecosystemIncentiveSent) {
-            require(uint256(200000000).mul(DECIMALS) == token.mint(ecosystemIncentive, uint256(200000000).mul(DECIMALS)));
+            require(uint256(200000000).mul(10 ** DECIMALS) == token.mint(ecosystemIncentive, uint256(200000000).mul(10 ** DECIMALS)));
+            ecosystemIncentiveSent = true;
         }
     }
 
     function sendMarketingBountyTokens() public onlyOwner {
         if (false == marketingBountySent) {
-            require(uint256(50000000).mul(DECIMALS) == token.mint(marketingBounty, uint256(50000000).mul(DECIMALS)));
+            require(uint256(50000000).mul(10 ** DECIMALS) == token.mint(marketingBounty, uint256(50000000).mul(10 ** DECIMALS)));
+            marketingBountySent = true;
         }
     }
 
     function sendLiquidityFundTokens() public onlyOwner {
         if (false == liquidityFundSent) {
-            require(uint256(50000000).mul(DECIMALS) == token.mint(liquidityFund, uint256(50000000).mul(DECIMALS)));
+            require(uint256(50000000).mul(10 ** DECIMALS) == token.mint(liquidityFund, uint256(50000000).mul(10 ** DECIMALS)));
+            liquidityFundSent = true;
         }
     }
 
     function sendTreasuryTokens() public onlyOwner {
         if (false == treasurySent) {
-            require(uint256(200000000).mul(DECIMALS) == token.mint(treasury, uint256(200000000).mul(DECIMALS)));
+            require(uint256(200000000).mul(10 ** DECIMALS) == token.mint(treasury, uint256(200000000).mul(10 ** DECIMALS)));
+            treasurySent = true;
         }
     }
 

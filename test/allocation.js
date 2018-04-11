@@ -185,6 +185,11 @@ contract('Allocations', function (accounts) {
         await allocations.allocate()
             .then(Utils.receiptShouldSucceed);
 
+        await allocations.sendMarketingBountyTokens()
+            .then(Utils.receiptShouldSucceed);
+        await allocations.sendMarketingBountyTokens()
+            .then(Utils.receiptShouldSucceed);
+
         await Utils.checkState({allocations, token}, {
             allocations: {
                 token: token.address,
@@ -197,6 +202,7 @@ contract('Allocations', function (accounts) {
                     {[accounts[1]]: new BigNumber('10000').mul(precision).valueOf()},
                     {[accounts[2]]: new BigNumber('10000').mul(precision).valueOf()},
                     {[accounts[3]]: new BigNumber('10000').mul(precision).valueOf()},
+                    {[accounts[6]]: new BigNumber('50000000').mul(precision).valueOf()},
                 ],
             }
         });
