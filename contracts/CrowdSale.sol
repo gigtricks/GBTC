@@ -1,4 +1,4 @@
-pragma solidity 0.4.19;
+pragma solidity 0.4.21;
 
 import "./SellableToken.sol";
 //import "./PrivateSale.sol";
@@ -15,7 +15,7 @@ contract CrowdSale is SellableToken {
     uint256 public price;
 
     Stats public preICOStats;
-    mapping (address => uint256) public icoBalances;
+    mapping(address => uint256) public icoBalances;
 
     struct Stats {
         uint256 soldTokens;
@@ -40,7 +40,7 @@ contract CrowdSale is SellableToken {
         _startTime,
         _endTime,
         _maxTokenSupply,
-         _etherPriceInUSD
+        _etherPriceInUSD
     ) {
         softCap = 500000000000;
         hardCap = 5010477900000;
@@ -91,11 +91,11 @@ contract CrowdSale is SellableToken {
             )
         );
         tiers.push(
-        Tier(
-        uint256(15),
-        _startTime.add(30 days).add(1 weeks),
-        _startTime.add(30 days).add(2 weeks)
-        )
+            Tier(
+                uint256(15),
+                _startTime.add(30 days).add(1 weeks),
+                _startTime.add(30 days).add(2 weeks)
+            )
         );
         tiers.push(
             Tier(
@@ -136,7 +136,7 @@ contract CrowdSale is SellableToken {
             Tier(
                 uint256(0),
                 _startTime.add(30 days).add(7 weeks),
-                    _endTime
+                _endTime
             )
         );
     }
@@ -271,8 +271,8 @@ contract CrowdSale is SellableToken {
         if (activeTier >= PRE_ICO_TIER_FIRST && activeTier <= PRE_ICO_TIER_LAST) {
             return true;
         }
-        if(collectedUSD < softCap){
-            if(token.balanceOf(_from) - icoBalances[_from] >_value){
+        if (collectedUSD < softCap) {
+            if (token.balanceOf(_from) - icoBalances[_from] > _value) {
                 return true;
             }
             return false;

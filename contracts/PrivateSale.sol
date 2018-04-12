@@ -1,4 +1,4 @@
-pragma solidity 0.4.19;
+pragma solidity 0.4.21;
 
 
 import "./SellableToken.sol";
@@ -57,7 +57,7 @@ contract PrivateSale is SellableToken {
 
         usdAmount = _value.mul(etherPriceInUSD);
         tokenAmount = usdAmount.div(price);
-        if (tokenAmount < minPurchase) {
+        if (usdAmount < minPurchase) {
             return (0, 0);
         }
         usdAmount = usdAmount.div(uint256(10) ** 18);
