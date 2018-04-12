@@ -73,15 +73,14 @@ contract PrivateSale is SellableToken {
         bonus = _tokens.mul(discount).div(100)+_tokens;//75%
     }
 
-    function getStats(uint256 _ethPerBtc, uint256 _ethPerLtc ) public view returns (
+    function getStats(uint256 _ethPerBtc) public view returns (
         uint256 start,
         uint256 end,
         uint256 sold,
         uint256 maxSupply,
         uint256 min,
         uint256 tokensPerEth,
-        uint256 tokensPerBtc,
-        uint256 tokensPerLtc
+        uint256 tokensPerBtc
     ) {
         start = startTime;
         end = endTime;
@@ -91,7 +90,6 @@ contract PrivateSale is SellableToken {
         uint256 usd;
         (tokensPerEth, usd) = calculateTokensAmount(1 ether);
         (tokensPerBtc, usd) = calculateTokensAmount(_ethPerBtc);
-        (tokensPerLtc, usd) = calculateTokensAmount(_ethPerLtc);
     }
 
     function setICO(address _ico) public onlyOwner {
@@ -105,6 +103,15 @@ contract PrivateSale is SellableToken {
             maxTokenSupply = soldTokens;
         }
     }
+
+    function setMaxTokenSupply(uint256) public {
+        return;
+    }
+
+    function isTransferAllowed(address, uint256) public view returns (bool status){
+        return true;
+    }
+
     function buy(address _address, uint256 _value) internal returns (bool) {
         if (_value == 0 || _address == address(0)) {
             return false;
@@ -121,10 +128,13 @@ contract PrivateSale is SellableToken {
 
         etherHolder.transfer(this.balance);
         collectedEthers = collectedEthers.add(_value);
-
+        etherBalances[_address] = etherBalances[_address].add(_value);
+        transferEthers();
         Contribution(_address, _value, tokenAmount);
         return true;
     }
 
-
+    function transferEthers() internal {
+            etherHolder.transfer(this.balance);
+    }
 }

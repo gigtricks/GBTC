@@ -42,16 +42,11 @@ contract GigToken is MintingERC20 {
         allocations = GigAllocation(_allocations);
     }
 
-    function setLocked(bool _locked) public onlyOwner {
-        locked = _locked;
-    }
-
     function freezing(bool _transferFrozen) public onlyOwner {
         transferFrozen = _transferFrozen;
     }
 
     function isTransferAllowed(address _from, uint256 _value) public view returns (bool status) {
-//        @todo  adds  value checking for allocation
         return !transferFrozen
         && allocations.isTransferAllowed(_from, _value)
         && ico.isTransferAllowed(_from, _value);
@@ -69,9 +64,9 @@ contract GigToken is MintingERC20 {
         return super.transferFrom(_from, _to, _value);
     }
 
-    function burnInvestorTokens(address _address) public returns (uint256) {
-        if (address(ico) == msg.sender || address(privateSale) == msg.sender) {
-            return burnInternal(_address);
+    function burnInvestorTokens(address _address, uint256 _amount) public returns (uint256) {
+        if (address(ico) == msg.sender || address(privateSale) == msg.sender ||  address(allocations) == msg.sender) {
+            return burnInternal(_address, _amount);
         }
         return 0;
     }
@@ -81,12 +76,12 @@ contract GigToken is MintingERC20 {
         maxSupply = maxSupply.sub(_amount);
     }
 
-
-    function burnInternal(address _address) internal returns (uint256 amount) {
-        amount = balances[_address];
-        balances[_address] = 0;
-        totalSupply_ = totalSupply_.sub(amount);
-        Transfer(_address, address(0), amount);
+    function burnInternal(address _address, uint256 _amount) internal returns (uint256) {
+        require(_amount <= balances[_address]);
+        balances[_address] = balances[_address].sub(_amount);
+        totalSupply_ = totalSupply_.sub(_amount);
+        Transfer(_address, address(0), _amount);
+        return _amount;
     }
 
 }

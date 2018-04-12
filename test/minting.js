@@ -108,4 +108,15 @@ contract('MintinERC20', function (accounts) {
         let totalSupply= await token.totalSupply.call()
         assert.equal(totalSupply.valueOf(), new BigNumber(0).mul(precision).valueOf(), "total supply is not equal")
     });
+    it('testing tokens minting when locked', async function () {
+        await token.mint(accounts[0],  new BigNumber(0.5).mul(precision))
+            .then(Utils.receiptShouldSucceed)
+            .then(() => Utils.balanceShouldEqualTo(token, accounts[0], new BigNumber(0.5).mul(precision).valueOf()))
+        await token.setLocked(true);
+        await token.mint(accounts[0],  new BigNumber(0.5).mul(precision))
+            .then(Utils.receiptShouldSucceed)
+            .then(() => Utils.balanceShouldEqualTo(token, accounts[0], new BigNumber(0.5).mul(precision).valueOf()))
+        let totalSupply= await token.totalSupply.call()
+        assert.equal(totalSupply.valueOf(), new BigNumber(0.5).mul(precision).valueOf(), "total supply is not equal")
+    });
 });

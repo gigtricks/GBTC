@@ -5,7 +5,7 @@ import "./GigToken.sol";
 import "./Multivest.sol";
 
 
-contract SellableToken is Multivest{
+contract SellableToken is Multivest {
 
     GigToken public token;
 
@@ -31,7 +31,7 @@ contract SellableToken is Multivest{
     uint256 public etherPriceInUSD;
     uint256 public priceUpdateAt;
 
-    mapping (address => uint256) public etherBalances;
+    mapping(address => uint256) public etherBalances;
 
     Tier[] public tiers;
 
@@ -52,9 +52,9 @@ contract SellableToken is Multivest{
         uint256 _maxTokenSupply,
         uint256 _etherPriceInUSD
     )
-        public Multivest()
+    public Multivest()
     {
-        require(_token != address(0));
+        require(_token != address(0) && _etherHolder != address(0));
         token = GigToken(_token);
 
         require(_startTime < _endTime);
@@ -86,18 +86,16 @@ contract SellableToken is Multivest{
             maxPurchase = _max;
         }
     }
+
     function mint(address _address, uint256 _tokenAmount) public onlyOwner returns (uint256) {
         return mintInternal(_address, _tokenAmount);
     }
 
-    function isTransferAllowed(address _from, uint256 _value) public view returns (bool status){
-        return true;
-    }
+    function isTransferAllowed(address _from, uint256 _value) public view returns (bool status);
 
     function isActive() public view returns (bool);
 
     function withinPeriod() public view returns (bool);
-
 
     function getMinEthersInvestment() public view returns (uint256) {
         return uint256(1 ether).mul(minPurchase).div(etherPriceInUSD);
@@ -106,6 +104,7 @@ contract SellableToken is Multivest{
     function calculateTokensAmount(uint256 _value) public view returns (uint256 tokenAmount, uint256 usdAmount);
 
     function calculateEthersAmount(uint256 _tokens) public view returns (uint256 ethers, uint256 bonus);
+
     function setMaxTokenSupply(uint256 _amount) public;
 
     // set ether price in USD with 5 digits after the decimal point
@@ -148,9 +147,9 @@ contract SellableToken is Multivest{
         bytes memory bresult = bytes(_a);
         uint res = 0;
         bool decimals = false;
-        for (uint i=0; i<bresult.length; i++){
-            if ((bresult[i] >= 48)&&(bresult[i] <= 57)){
-                if (decimals){
+        for (uint i = 0; i < bresult.length; i++) {
+            if ((bresult[i] >= 48) && (bresult[i] <= 57)) {
+                if (decimals) {
                     if (_b == 0) break;
                     else _b--;
                 }
@@ -158,7 +157,7 @@ contract SellableToken is Multivest{
                 res += uint(bresult[i]) - 48;
             } else if (bresult[i] == 46) decimals = true;
         }
-        if (_b > 0) res *= 10**_b;
+        if (_b > 0) res *= 10 ** _b;
         return res;
     }
 }

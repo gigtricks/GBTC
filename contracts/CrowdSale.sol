@@ -228,14 +228,15 @@ contract CrowdSale is SellableToken {
         discount = _tokens.mul(tiers[activeTier].discount).div(100);
     }
 
-    function getStats(uint256 _ethPerBtc, uint256 _ethPerLtc) public view returns (
+    function getStats(uint256 _ethPerBtc) public view returns (
         uint256 sold,
         uint256 maxSupply,
         uint256 min,
         uint256 soft,
         uint256 hard,
         uint256 tokenPrice,
-        uint256[3] tokensAmounts,
+        uint256 tokensPerEth,
+        uint256 tokensPerBtc,
         uint256[39] tiersData
     ) {
         sold = soldTokens;
@@ -245,9 +246,8 @@ contract CrowdSale is SellableToken {
         hard = hardCap;
         tokenPrice = price;
         uint256 usd;
-        (tokensAmounts[0], usd) = calculateTokensAmount(1 ether);
-        (tokensAmounts[1], usd) = calculateTokensAmount(_ethPerBtc);
-        (tokensAmounts[2], usd) = calculateTokensAmount(_ethPerLtc);
+        (tokensPerEth, usd) = calculateTokensAmount(1 ether);
+        (tokensPerBtc, usd) = calculateTokensAmount(_ethPerBtc);
         uint256 j = 0;
         for (uint256 i = 0; i < tiers.length; i++) {
             tiersData[j++] = uint256(tiers[i].discount);
@@ -292,22 +292,16 @@ contract CrowdSale is SellableToken {
             return false;
         }
 
-        msg.sender.transfer(etherBalances[msg.sender]);
-        uint256 burnedAmount = token.burnInvestorTokens(msg.sender);
+        uint256 burnedAmount = token.burnInvestorTokens(msg.sender, icoBalances[msg.sender]);
         if (burnedAmount == 0) {
             return false;
         }
+        msg.sender.transfer(etherBalances[msg.sender]);
 
         Refund(msg.sender, etherBalances[msg.sender], burnedAmount);
         etherBalances[msg.sender] = 0;
 
         return true;
-    }
-
-    function transferEthers() internal {
-        if (collectedUSD >= softCap) {
-            etherHolder.transfer(this.balance);
-        }
     }
 
     function setMaxTokenSupply(uint256 _amount) public {
@@ -316,7 +310,19 @@ contract CrowdSale is SellableToken {
         }
     }
 
-    function mintPreICO(address _address, uint256 _tokenAmount, uint256 _ethAmount, uint256 _usdAmount) internal returns (uint256) {
+    function transferEthers() internal {
+        if (collectedUSD >= softCap) {
+            etherHolder.transfer(this.balance);
+        }
+
+    }
+
+    function mintPreICO(
+        address _address,
+        uint256 _tokenAmount,
+        uint256 _ethAmount,
+        uint256 _usdAmount
+    ) internal returns (uint256) {
         uint256 mintedAmount = token.mint(_address, _tokenAmount);
 
         require(mintedAmount == _tokenAmount);
@@ -359,7 +365,7 @@ contract CrowdSale is SellableToken {
             transferEthers();
             collectedEthers = collectedEthers.add(_value);
             etherBalances[_address] = etherBalances[_address].add(_value);
-            icoBalances[_address] = icoBalances[_address].add(_value);
+            icoBalances[_address] = icoBalances[_address].add(tokenAmount);
         }
 
         Contribution(_address, _value, tokenAmount);

@@ -32,16 +32,20 @@ contract GigAllocation is Ownable {
 
     CrowdSale public ico;
 
+    //status - 0 new
+    //status - 1 sent
+    //status - 2 removed
+
     struct AdvisorsAllocation {
         address holderAddress;
         uint256 amount;
-        bool sent;
+        uint8 status;
     }
 
     struct TeamsAllocation {
         address holderAddress;
         uint256 amount;
-        bool sent;
+        uint8 status;
     }
 
     function GigAllocation(
@@ -72,6 +76,37 @@ contract GigAllocation is Ownable {
     function setICO(address _ico) public onlyOwner {
         require(_ico != address(0));
         ico = CrowdSale(_ico);
+    }
+
+    function removeAdvisorsTier(uint256 _id) public onlyOwner {
+        if (allocations[_id].status == 1) {
+            return;
+        }
+        AdvisorsAllocation storage allocation = allocations[_id];
+        allocation.status = 2;
+        remainingTokens = remainingTokens.add(allocation.amount);
+    }
+
+    function removeTeamTier(uint256 _id) public onlyOwner {
+        if (team[_id].status == 1) {
+            return;
+        }
+        TeamsAllocation storage teamConfig = team[_id];
+        teamConfig.status = 2;
+        remainingTokens = remainingTokens.add(teamConfig.amount);
+    }
+
+    function burnAdviserOrTeamMemberTokens(address _holder) public onlyOwner {
+        uint256 amount = advisorsBalances[_holder].add(teamBalances[_holder]);
+        if (amount <= token.balanceOf(_holder)) {
+            if (amount > 0) {
+                require(amount == token.burnInvestorTokens(_holder, amount));
+                remainingTokens = remainingTokens.add(amount);
+                advisorsBalances[_holder] = 0;
+                teamBalances[_holder] = 0;
+            }
+        }
+
     }
 
     function sendEcosystemIncentiveTokens() public onlyOwner {
@@ -108,7 +143,7 @@ contract GigAllocation is Ownable {
 
         for (uint8 i = 0; i < _addresses.length; i++) {
             require(_addresses[i] != address(0));
-            allocations.push(AdvisorsAllocation(_addresses[i], _amount, false));
+            allocations.push(AdvisorsAllocation(_addresses[i], _amount, 0));
             remainingTokens = remainingTokens.sub(_amount);
         }
         return true;
@@ -120,7 +155,7 @@ contract GigAllocation is Ownable {
 
         for (uint8 i = 0; i < _addresses.length; i++) {
             require(_addresses[i] != address(0));
-            team.push(TeamsAllocation(_addresses[i], _amount, false));
+            team.push(TeamsAllocation(_addresses[i], _amount, 0));
             remainingTokens = remainingTokens.sub(_amount);
         }
 
@@ -157,11 +192,11 @@ contract GigAllocation is Ownable {
 
     function allocateAdvisors() internal {
         for (uint256 i = 0; i < allocations.length; i++) {
-            if (true == allocations[i].sent) {
+            if (0 != allocations[i].status) {
                 continue;
             }
             AdvisorsAllocation storage allocation = allocations[i];
-            allocation.sent = true;
+            allocation.status = 1;
 
             require(allocation.amount == token.mint(allocation.holderAddress, allocation.amount));
             advisorsBalances[allocation.holderAddress] = advisorsBalances[allocation.holderAddress].add(allocation.amount);
@@ -171,11 +206,11 @@ contract GigAllocation is Ownable {
     function allocateTeam() internal {
         for (uint256 i = 0; i < team.length; i++) {
 
-            if (true == team[i].sent) {
+            if (0 != team[i].status) {
                 continue;
             }
             TeamsAllocation storage teamConfig = team[i];
-            teamConfig.sent = true;
+            teamConfig.status = 1;
 
             require(teamConfig.amount == token.mint(teamConfig.holderAddress, teamConfig.amount));
             teamBalances[teamConfig.holderAddress] = teamBalances[teamConfig.holderAddress].add(teamConfig.amount);

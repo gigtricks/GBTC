@@ -50,6 +50,7 @@ async function deploy() {
 
     const allocations = await GigAllocation.new(token.address, ico.address, new BigNumber('150000000000000000000000000'),
         web3.eth.accounts[5],web3.eth.accounts[6],web3.eth.accounts[7],web3.eth.accounts[8])
+    await token.setAllocationContract(allocations.address);
     await token.addMinter(allocations.address);
     return {token, ico, ico, ico, allocations};
 }
@@ -160,13 +161,18 @@ contract('Allocations', function (accounts) {
             accounts[3],
         ])
             .then(Utils.receiptShouldSucceed);
+        await allocations.setTeamAllocation(new BigNumber('10000').mul(precision).valueOf(),[
+            accounts[4],
+            accounts[9],
+        ])
+            .then(Utils.receiptShouldSucceed);
         await allocations.setICO(ico.address)
 
         await Utils.checkState({allocations, token}, {
             allocations: {
                 token: token.address,
                 ico: ico.address,
-                remainingTokens: new BigNumber('150000000').mul(precision).sub(new BigNumber('30000').mul(precision)).valueOf()
+                remainingTokens: new BigNumber('150000000').mul(precision).sub(new BigNumber('50000').mul(precision)).valueOf()
             },
             token: {
                 balanceOf: [
@@ -174,6 +180,8 @@ contract('Allocations', function (accounts) {
                     {[accounts[1]]: new BigNumber('0').mul(precision).valueOf()},
                     {[accounts[2]]: new BigNumber('0').mul(precision).valueOf()},
                     {[accounts[3]]: new BigNumber('0').mul(precision).valueOf()},
+                    {[accounts[4]]: new BigNumber('0').mul(precision).valueOf()},
+                    {[accounts[9]]: new BigNumber('0').mul(precision).valueOf()},
                 ],
             }
         });
@@ -182,6 +190,7 @@ contract('Allocations', function (accounts) {
             .then(Utils.receiptShouldFailed)
             .catch(Utils.catchReceiptShouldFailed);
 
+        await allocations.removeAdvisorsTier(1);
         await allocations.allocate()
             .then(Utils.receiptShouldSucceed);
 
@@ -189,7 +198,45 @@ contract('Allocations', function (accounts) {
             .then(Utils.receiptShouldSucceed);
         await allocations.sendMarketingBountyTokens()
             .then(Utils.receiptShouldSucceed);
+        await allocations.sendEcosystemIncentiveTokens()
+            .then(Utils.receiptShouldSucceed);
+        await allocations.sendEcosystemIncentiveTokens()
+            .then(Utils.receiptShouldSucceed);
+        await allocations.sendLiquidityFundTokens()
+            .then(Utils.receiptShouldSucceed);
+        await allocations.sendLiquidityFundTokens()
+            .then(Utils.receiptShouldSucceed);
+        await allocations.sendTreasuryTokens()
+            .then(Utils.receiptShouldSucceed);
+        await allocations.sendTreasuryTokens()
+            .then(Utils.receiptShouldSucceed);
 
+        await Utils.checkState({allocations, token}, {
+            allocations: {
+                token: token.address,
+                ico: ico.address,
+                remainingTokens: new BigNumber('150000000').mul(precision).sub(new BigNumber('40000').mul(precision)).valueOf()
+            },
+            token: {
+                balanceOf: [
+                    {[accounts[0]]: new BigNumber('0').mul(precision).valueOf()},
+                    {[accounts[1]]: new BigNumber('10000').mul(precision).valueOf()},
+                    {[accounts[2]]: new BigNumber('0').mul(precision).valueOf()},
+                    {[accounts[3]]: new BigNumber('10000').mul(precision).valueOf()},
+                    {[accounts[4]]: new BigNumber('10000').mul(precision).valueOf()},
+                    {[accounts[5]]: new BigNumber('200000000').mul(precision).valueOf()},
+                    {[accounts[6]]: new BigNumber('50000000').mul(precision).valueOf()},
+                    {[accounts[7]]: new BigNumber('50000000').mul(precision).valueOf()},
+                    {[accounts[8]]: new BigNumber('200000000').mul(precision).valueOf()},
+                    {[accounts[9]]: new BigNumber('10000').mul(precision).valueOf()},
+                ],
+            }
+        });
+        assert.equal(await allocations.teamBalances.call(accounts[1]), 0, "teamBalances is not equal");
+        assert.equal(await allocations.advisorsBalances.call(accounts[1]),  new BigNumber('10000').mul(precision).valueOf(), "advisorsBalances is not equal");
+        assert.equal(await allocations.teamBalances.call(accounts[4]), new BigNumber('10000').mul(precision).valueOf(), "teamBalances is not equal");
+        assert.equal(await allocations.advisorsBalances.call(accounts[4]),  0, "advisorsBalances is not equal");
+        await allocations.burnAdviserOrTeamMemberTokens(accounts[3])
         await Utils.checkState({allocations, token}, {
             allocations: {
                 token: token.address,
@@ -200,13 +247,12 @@ contract('Allocations', function (accounts) {
                 balanceOf: [
                     {[accounts[0]]: new BigNumber('0').mul(precision).valueOf()},
                     {[accounts[1]]: new BigNumber('10000').mul(precision).valueOf()},
-                    {[accounts[2]]: new BigNumber('10000').mul(precision).valueOf()},
-                    {[accounts[3]]: new BigNumber('10000').mul(precision).valueOf()},
+                    {[accounts[2]]: new BigNumber('0').mul(precision).valueOf()},
+                    {[accounts[3]]: new BigNumber('0').mul(precision).valueOf()},
                     {[accounts[6]]: new BigNumber('50000000').mul(precision).valueOf()},
                 ],
             }
         });
-
     });
 
 

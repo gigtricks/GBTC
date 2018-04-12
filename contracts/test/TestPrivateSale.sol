@@ -25,5 +25,4 @@ contract TestPrivateSale is PrivateSale {
     function testChangeSoldTokens(uint256 _sold) public {
         soldTokens = _sold;
     }
-
 }

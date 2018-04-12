@@ -46,6 +46,10 @@ contract GigERC20 is StandardToken, Ownable {
         creationBlock = block.number;
     }
 
+    function setLocked(bool _locked) public onlyOwner {
+        locked = _locked;
+    }
+
     /* public methods */
     function transfer(address _to, uint256 _value) public returns (bool) {
         require(locked == false);
