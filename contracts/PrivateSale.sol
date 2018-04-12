@@ -57,10 +57,10 @@ contract PrivateSale is SellableToken {
 
         usdAmount = _value.mul(etherPriceInUSD);
         tokenAmount = usdAmount.div(price);
+        usdAmount = usdAmount.div(uint256(10) ** 18);
         if (usdAmount < minPurchase) {
             return (0, 0);
         }
-        usdAmount = usdAmount.div(uint256(10) ** 18);
         tokenAmount = tokenAmount.mul(discount).div(100)+tokenAmount;//75%
     }
 
