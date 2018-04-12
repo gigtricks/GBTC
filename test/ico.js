@@ -446,7 +446,76 @@ contract('ICO', function (accounts) {
                 ],
             }
         });
-        //todo
+        await ico.changeICODates(0, parseInt(new Date().getTime() / 1000 - 3600 * 2), parseInt(new Date().getTime() / 1000 - 3600));
+        await ico.changeICODates(1, parseInt(new Date().getTime() / 1000 - 3600 * 2), parseInt(new Date().getTime() / 1000 - 3600));
+        await ico.changeICODates(2, parseInt(new Date().getTime() / 1000) - 3600, parseInt(new Date().getTime() / 1000) - 3600);
+        await ico.changeICODates(3, parseInt(new Date().getTime() / 1000) - 3600, parseInt(new Date().getTime() / 1000) - 3600);
+        await ico.changeICODates(4, parseInt(new Date().getTime() / 1000) - 3600, parseInt(new Date().getTime() / 1000) - 3600);
+        await ico.changeICODates(5, parseInt(new Date().getTime() / 1000) - 3600, parseInt(new Date().getTime() / 1000) - 3600 + 3600 * 24);
+        assert.equal(await ico.isActive.call(), true, "isActive is not equal");
+        assert.equal(new BigNumber(await ico.getActiveTier.call()).valueOf(), 5, "getActiveTier is not equal");
+
+        //((10 ^ 18) * (1500 * 10 ^ 5) / (0.2480 * 10 ^ 5)) * 125 / 100
+        await makeTransactionKYC(ico, signAddress, accounts[3], new BigNumber('1').mul(precision).valueOf())
+            .then(Utils.receiptShouldSucceed);
+        await Utils.checkState({ico, token}, {
+            token: {
+                totalSupply: new BigNumber('7560483870967741935483').valueOf(),
+                balanceOf: [
+                    {[accounts[3]]: new BigNumber('7560483870967741935483').valueOf()},
+                ],
+            },
+            ico: {
+                token: token.address,
+                minPurchase: new BigNumber('10000000').valueOf(),
+                maxPurchase: new BigNumber('0').mul(precision).valueOf(),
+                softCap: new BigNumber('5000000').mul(usdPrecision).valueOf(),
+                hardCap: new BigNumber('50104779').mul(usdPrecision).valueOf(),
+                maxTokenSupply: new BigNumber('350000000').mul(precision).valueOf(),
+                soldTokens: new BigNumber('7560483870967741935483').valueOf(),
+                collectedEthers: new BigNumber('1').mul(precision).valueOf(),
+                etherHolder: etherHolder,
+                collectedUSD: new BigNumber('1500').mul(usdPrecision).valueOf(),
+                etherBalances: [
+                    {[accounts[0]]: 0},
+                    {[accounts[3]]: new BigNumber('1').mul(precision).valueOf()},
+                ],
+                allowedMultivests: [
+                    {[accounts[0]]: true},
+                    {[accounts[1]]: false},
+                ],
+            }
+        });
+        await ico.testChangeICOPeriod(parseInt(new Date().getTime() / 1000) - 2* 3600 , parseInt(new Date().getTime() / 1000)  - 3600)
+        await ico.burnUnsoldTokens();
+        await Utils.checkState({ico, token}, {
+            token: {
+                totalSupply: new BigNumber('7560483870967741935483').valueOf(),
+                balanceOf: [
+                    {[accounts[3]]: new BigNumber('7560483870967741935483').valueOf()},
+                ],
+            },
+            ico: {
+                token: token.address,
+                minPurchase: new BigNumber('10000000').valueOf(),
+                maxPurchase: new BigNumber('0').mul(precision).valueOf(),
+                softCap: new BigNumber('5000000').mul(usdPrecision).valueOf(),
+                hardCap: new BigNumber('50104779').mul(usdPrecision).valueOf(),
+                maxTokenSupply: new BigNumber('7560483870967741935483').valueOf(),
+                soldTokens: new BigNumber('7560483870967741935483').valueOf(),
+                collectedEthers: new BigNumber('1').mul(precision).valueOf(),
+                etherHolder: etherHolder,
+                collectedUSD: new BigNumber('1500').mul(usdPrecision).valueOf(),
+                etherBalances: [
+                    {[accounts[0]]: 0},
+                    {[accounts[3]]: new BigNumber('1').mul(precision).valueOf()},
+                ],
+                allowedMultivests: [
+                    {[accounts[0]]: true},
+                    {[accounts[1]]: false},
+                ],
+            }
+        });
 
     });
 
