@@ -65,11 +65,14 @@ contract PrivateSale is SellableToken {
     }
 
     function calculateEthersAmount(uint256 _tokens) public view returns (uint256 ethers, uint256 bonus) {
-        if (_tokens == 0 || _tokens < minPurchase) {
+        if (_tokens == 0) {
             return (0, 0);
         }
 
         ethers = _tokens.mul(price).div(etherPriceInUSD);
+        if( ethers < getMinEthersInvestment()){
+            return (0, 0);
+        }
         bonus = _tokens.mul(discount).div(100)+_tokens;//75%
     }
 

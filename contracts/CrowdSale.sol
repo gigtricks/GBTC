@@ -209,7 +209,7 @@ contract CrowdSale is SellableToken {
     }
 
     function calculateEthersAmount(uint256 _tokens) public view returns (uint256 ethers, uint256 discount) {
-        if (_tokens == 0 || _tokens < minPurchase) {
+        if (_tokens == 0 ) {
             return (0, 0);
         }
 
@@ -225,6 +225,9 @@ contract CrowdSale is SellableToken {
         }
 
         ethers = _tokens.mul(price).div(etherPriceInUSD);
+        if( ethers < getMinEthersInvestment()){
+            return (0, 0);
+        }
         discount = _tokens.mul(tiers[activeTier].discount).div(100);
     }
 
