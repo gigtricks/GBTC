@@ -36,8 +36,9 @@
   },
   "dependencies": {
     "minimetoken": "^0.2.0",
-    "truffle": "4.0.5",
-    "zeppelin-solidity": "^1.7.0"
+    "truffle": "^4.0.6",
+    "zeppelin-solidity": "^1.7.0",
+    "solc": "0.4.19"
   },
   "devDependencies": {
     "bignumber.js": "^4.1.0",
