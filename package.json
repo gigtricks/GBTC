@@ -21,7 +21,7 @@
   "scripts": {
     "lint": "npm run solhint",
     "ganache": "ganache-cli > /dev/null 2>&1 &",
-    "test": "truffle.cmd test",
+    "test": "truffle test",
     "develop": "truffle develop",
     "compile": "truffle compile",
     "coverage": "./node_modules/.bin/solidity-coverage",

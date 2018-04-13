@@ -200,12 +200,14 @@ contract CrowdSale is SellableToken {
             }
         }
         usdAmount = _value.mul(etherPriceInUSD);
-        tokenAmount = usdAmount.div(price);
+        
+        tokenAmount = usdAmount.div(price * (100 - tiers[activeTier].discount) / 100);
+        
         usdAmount = usdAmount.div(uint256(10) ** 18);
+
         if (usdAmount < minPurchase) {
             return (0, 0);
         }
-        tokenAmount = tokenAmount.mul(uint256(100).add(tiers[activeTier].discount)).div(uint256(100));
     }
 
     function calculateEthersAmount(uint256 _tokens) public view returns (uint256 ethers, uint256 discount) {
@@ -225,7 +227,10 @@ contract CrowdSale is SellableToken {
         }
 
         ethers = _tokens.mul(price).div(etherPriceInUSD);
-        discount = _tokens.mul(tiers[activeTier].discount).div(100);
+
+        uint256 usdAmount = ethers.mul(etherPriceInUSD);
+
+        discount = usdAmount.div(price * (100 - tiers[activeTier].discount) / 100) - _tokens;
     }
 
     function getStats(uint256 _ethPerBtc) public view returns (

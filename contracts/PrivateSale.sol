@@ -56,12 +56,14 @@ contract PrivateSale is SellableToken {
         }
 
         usdAmount = _value.mul(etherPriceInUSD);
-        tokenAmount = usdAmount.div(price);
+
+        tokenAmount = usdAmount.div(price * (100 - discount) / 100);
+
         usdAmount = usdAmount.div(uint256(10) ** 18);
+
         if (usdAmount < minPurchase) {
             return (0, 0);
         }
-        tokenAmount = tokenAmount.mul(discount).div(100)+tokenAmount;//75%
     }
 
     function calculateEthersAmount(uint256 _tokens) public view returns (uint256 ethers, uint256 bonus) {
@@ -70,7 +72,10 @@ contract PrivateSale is SellableToken {
         }
 
         ethers = _tokens.mul(price).div(etherPriceInUSD);
-        bonus = _tokens.mul(discount).div(100)+_tokens;//75%
+
+        uint256 usdAmount = ethers.mul(etherPriceInUSD);
+
+        bonus = usdAmount.div(price * (100 - discount) / 100) - _tokens;
     }
 
     function getStats(uint256 _ethPerBtc) public view returns (
