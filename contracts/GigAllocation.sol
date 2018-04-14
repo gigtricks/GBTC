@@ -65,6 +65,10 @@ contract GigAllocation is Ownable {
         token = GigToken(_token);
     }
 
+    function changeIcoEndTime(address _icoEndTime) public onlyOwner {
+        unlockTime = _icoEndTime + 1 years;
+    }
+
     function setAllocationWallets(
         address _ecosystemIncentive,
         address _marketingBounty,

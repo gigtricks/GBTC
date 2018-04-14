@@ -50,7 +50,7 @@ contract GigToken is MintingERC20 {
     }
 
     function isTransferAllowed(address _from, uint256 _value) public view returns (bool status) {
-        if (transferFrozen == false) {
+        if (transferFrozen == true) {
             return false;
         }
 
