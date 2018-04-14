@@ -141,15 +141,14 @@ contract CrowdSale is SellableToken {
     }
 
     function changeICODates(uint8 _tierId, uint256 _start, uint256 _end) public onlyOwner {
-        if (_start != 0 && _start < _end && _tierId < tiers.length) {
-            Tier storage icoTier = tiers[_tierId];
-            icoTier.startTime = _start;
-            icoTier.endTime = _end;
-            if (_tierId == PRE_ICO_TIER_FIRST) {
-                startTime = _start;
-            } else if (_tierId == ICO_TIER_LAST) {
-                endTime = _end;
-            }
+        require(_start != 0 && _start < _end && _tierId < tiers.length);
+        Tier storage icoTier = tiers[_tierId];
+        icoTier.startTime = _start;
+        icoTier.endTime = _end;
+        if (_tierId == PRE_ICO_TIER_FIRST) {
+            startTime = _start;
+        } else if (_tierId == ICO_TIER_LAST) {
+            endTime = _end;
         }
     }
 
