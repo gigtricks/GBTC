@@ -31,10 +31,10 @@ contract GigAllocation is Ownable {
         uint256 periods; // number of periods, e.g. 12 months for unlocking = 12
     }
 
-    mapping(address => Allocation) allocations;
+    mapping(address => Allocation) public allocations;
 
-    mapping(address => bool) trustedAddresses;
-    mapping(address => uint256) burnableBalances;
+    mapping(address => bool) public trustedAddresses;
+    mapping(address => uint256) public burnableBalances;
 
     modifier onlyTrustedAddress(address _address) {
         require(trustedAddresses[_address] == true);
