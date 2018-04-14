@@ -300,12 +300,12 @@ contract CrowdSale is SellableToken {
         if (burnedAmount == 0) {
             return false;
         }
-
+        uint256 etherBalance = etherBalances[msg.sender];
         etherBalances[msg.sender] = 0;
 
-        msg.sender.transfer(etherBalances[msg.sender]);
+        msg.sender.transfer(etherBalance);
 
-        Refund(msg.sender, etherBalances[msg.sender], burnedAmount);
+        Refund(msg.sender, etherBalance, burnedAmount);
 
         return true;
     }
@@ -365,7 +365,7 @@ contract CrowdSale is SellableToken {
 
             require(usdAmount > 0 && mintedAmount > 0);
             if (activeTier <= LOCK_BALANCES_TO) {
-                allocation.allocateToken(_address, _value, MONTH_IN_SEC, 1 years);
+                allocation.allocateToken(_address, mintedAmount, MONTH_IN_SEC, 1 years);
             }
             etherHolder.transfer(this.balance);
         } else {
