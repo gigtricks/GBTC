@@ -72,7 +72,6 @@ contract GigToken is MintingERC20 {
     }
 
     function burnUnsoldTokens(uint256 _amount) public onlyTrustedBurnersAddress(msg.sender) {
-        Transfer(address(this), address(0), maxSupply.sub(_amount));
         maxSupply = maxSupply.sub(_amount);
     }
 
