@@ -11,8 +11,8 @@ contract GigToken is MintingERC20 {
     GigAllocation public allocations;
 
     bool public transferFrozen = false;
-    uint256 icoEndTime;
-    mapping(address => bool) trustedBurners;
+    uint256 public icoEndTime;
+    mapping(address => bool) public trustedBurners;
     modifier onlyTrustedBurnersAddress(address _address) {
         require(trustedBurners[_address] == true);
         _;
