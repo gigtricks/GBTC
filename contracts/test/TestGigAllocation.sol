@@ -8,7 +8,7 @@ contract TestGigAllocation is GigAllocation {
 
     function TestGigAllocation(
         address _token,
-        address _ico,
+        uint256 _icoEndTime,
         uint256 _remainingTokens, //150000000000000000000000000
         address _ecosystemIncentive,
         address _marketingBounty,
@@ -16,7 +16,7 @@ contract TestGigAllocation is GigAllocation {
         address _treasury
     ) public GigAllocation(
         _token,
-        _ico,
+        _icoEndTime,
         _remainingTokens, //150000000000000000000000000
         _ecosystemIncentive,
         _marketingBounty,

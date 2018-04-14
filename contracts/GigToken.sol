@@ -1,33 +1,36 @@
 pragma solidity 0.4.19;
 
 import "./MintingERC20.sol";
-import "./CrowdSale.sol";
+import "./SellableToken.sol";
 import "./GigAllocation.sol";
 
 
 contract GigToken is MintingERC20 {
 
-    CrowdSale public ico;
+    SellableToken public ico;
     GigAllocation public allocations;
 
     bool public transferFrozen = false;
+    uint256 icoEndTime;
     mapping(address => bool) trustedBurners;
     modifier onlyTrustedBurnersAddress(address _address) {
         require(trustedBurners[_address] == true);
         _;
     }
 
-    function GigToken(bool _locked) public
+    function GigToken(bool _locked, uint256 _icoEndTime) public
     MintingERC20(0, maxSupply, "GigBit", 18, "GBTC", false, _locked)
     {
+        icoEndTime = _icoEndTime;
         standard = "GBTC 0.1";
         maxSupply = uint256(1000000000).mul(uint256(10) ** decimals);
     }
 
     function setICO(address _ico) public onlyOwner {
         require(_ico != address(0));
-        ico = CrowdSale(_ico);
+        ico = SellableToken(_ico);
         trustedBurners[_ico] = true;
+        icoEndTime = ico.endTime();
     }
 
     // privateSale, CrowdSale, Allocation contracts
@@ -47,9 +50,19 @@ contract GigToken is MintingERC20 {
     }
 
     function isTransferAllowed(address _from, uint256 _value) public view returns (bool status) {
-        return !transferFrozen
-        && allocations.isAllowedToTransfer(_from, balanceOf(_from), _value)
-        && ico.isTransferAllowed(_from, _value);
+        if (transferFrozen == false) {
+            return false;
+        }
+
+        if (allocations.isLocked(_from) && allocations.isAllowedToTransfer(_from, balanceOf(_from), _value) == false) {
+            return false;
+        }
+
+        if (block.timestamp < icoEndTime && ico != address(0)  && ico.isTransferAllowed(_from, _value) == false) {
+            return false;
+        }
+
+        return true;
     }
 
     function transfer(address _to, uint _value) public returns (bool) {
@@ -58,28 +71,28 @@ contract GigToken is MintingERC20 {
     }
 
     function transferFrom(address _from, address _to, uint _value) public returns (bool success) {
-        if (ico.endTime() > block.timestamp || !isTransferAllowed(_from, _value)) {
+        if ((icoEndTime > block.timestamp) || !isTransferAllowed(_from, _value)) {
             return false;
         }
         return super.transferFrom(_from, _to, _value);
     }
 
     function approve(address _spender, uint256 _value) public returns (bool success) {
-        if (ico.endTime() > block.timestamp) {
+        if (icoEndTime > block.timestamp) {
             return false;
         }
         return super.approve(_spender, _value);
     }
 
     function increaseApproval(address _spender, uint _addedValue) public returns (bool success) {
-        if (ico.endTime() > block.timestamp) {
+        if (icoEndTime > block.timestamp) {
             return false;
         }
         return super.increaseApproval(_spender, _addedValue);
     }
 
     function decreaseApproval(address _spender, uint _subtractedValue) public returns (bool success) {
-        if (ico.endTime() > block.timestamp) {
+        if (icoEndTime > block.timestamp) {
             return false;
         }
         return super.decreaseApproval(_spender, _subtractedValue);

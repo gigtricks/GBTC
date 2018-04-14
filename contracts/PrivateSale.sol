@@ -116,6 +116,10 @@ contract PrivateSale is SellableToken {
         require(false);
     }
 
+    function isTransferAllowed(address, uint256) public view returns (bool){
+        return false;
+    }
+
     function buy(address _address, uint256 _value) internal returns (bool) {
         if (_value == 0 || _address == address(0) || address(allocation) == address(0)) {
             return false;

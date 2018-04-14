@@ -102,6 +102,8 @@ contract SellableToken is Multivest {
 
     function isActive() public view returns (bool);
 
+    function isTransferAllowed(address _from, uint256 _value) public view returns (bool);
+
     function withinPeriod() public view returns (bool);
 
     function getMinEthersInvestment() public view returns (uint256) {

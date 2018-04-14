@@ -23,7 +23,6 @@ contract GigAllocation is Ownable {
     address public treasury;
 
     GigToken public token;
-    CrowdSale public ico;
 
     struct Allocation {
         uint256 balance; // locked balance to unlock
@@ -43,22 +42,21 @@ contract GigAllocation is Ownable {
 
     function GigAllocation(
         address _token,
-        address _crowdSale,
+        uint256 _icoEndTime,
         uint256 _remainingTokens, //150000000000000000000000000
         address _ecosystemIncentive,
         address _marketingBounty,
         address _liquidityFund,
         address _treasury
     ) public {
-        require(_token != address(0) && _crowdSale != address(0));
+        require(_token != address(0));
         token = GigToken(_token);
-        ico = CrowdSale(_crowdSale);
         remainingTokens = _remainingTokens;
         ecosystemIncentive = _ecosystemIncentive;
         marketingBounty = _marketingBounty;
         liquidityFund = _liquidityFund;
         treasury = _treasury;
-        unlockTime = ico.endTime() + 1 years;
+        unlockTime = _icoEndTime + 1 years;
 
     }
 
@@ -67,12 +65,7 @@ contract GigAllocation is Ownable {
         token = GigToken(_token);
     }
 
-    function setICO(address _ico) public onlyOwner {
-        require(_ico != address(0));
-        ico = CrowdSale(_ico);
-    }
-
-    function setAllocationValets(
+    function setAllocationWallets(
         address _ecosystemIncentive,
         address _marketingBounty,
         address _liquidityFund,
