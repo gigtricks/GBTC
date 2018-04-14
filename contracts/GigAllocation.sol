@@ -72,29 +72,41 @@ contract GigAllocation is Ownable {
         ico = CrowdSale(_ico);
     }
 
+    function setAllocationValets(
+        address _ecosystemIncentive,
+        address _marketingBounty,
+        address _liquidityFund,
+        address _treasury
+    ) public onlyOwner {
+        remainingTokens = _remainingTokens;
+        ecosystemIncentive = _ecosystemIncentive;
+        marketingBounty = _marketingBounty;
+        liquidityFund = _liquidityFund;
+    }
+
     function sendEcosystemIncentiveTokens() public onlyOwner {
-        if (false == ecosystemIncentiveSent) {
+        if (false == ecosystemIncentiveSent && ecosystemIncentive != address(0)) {
             require(uint256(200000000).mul(10 ** DECIMALS) == token.mint(ecosystemIncentive, uint256(200000000).mul(10 ** DECIMALS)));
             ecosystemIncentiveSent = true;
         }
     }
 
     function sendMarketingBountyTokens() public onlyOwner {
-        if (false == marketingBountySent) {
+        if (false == marketingBountySent && marketingBounty != address(0)) {
             require(uint256(50000000).mul(10 ** DECIMALS) == token.mint(marketingBounty, uint256(50000000).mul(10 ** DECIMALS)));
             marketingBountySent = true;
         }
     }
 
     function sendLiquidityFundTokens() public onlyOwner {
-        if (false == liquidityFundSent) {
+        if (false == liquidityFundSent && liquidityFund != address(0)) {
             require(uint256(50000000).mul(10 ** DECIMALS) == token.mint(liquidityFund, uint256(50000000).mul(10 ** DECIMALS)));
             liquidityFundSent = true;
         }
     }
 
     function sendTreasuryTokens() public onlyOwner {
-        if (false == treasurySent) {
+        if (false == treasurySent && treasury != address(0)) {
             require(uint256(200000000).mul(10 ** DECIMALS) == token.mint(treasury, uint256(200000000).mul(10 ** DECIMALS)));
             treasurySent = true;
         }
@@ -104,6 +116,7 @@ contract GigAllocation is Ownable {
         require(_address != address(0));
         trustedAddresses[_address] = _status;
     }
+
 
     // allocate team token
     function allocateTeamToken(address _holderAddress, uint256 _tokens) public onlyOwner {
