@@ -12,6 +12,7 @@ contract GigAllocation is Ownable {
     uint256 public constant DECIMALS = 18;
 
     uint256 public remainingTokens;
+    uint256 public unlockTime;
     bool public ecosystemIncentiveSent;
     bool public marketingBountySent;
     bool public liquidityFundSent;
@@ -21,50 +22,43 @@ contract GigAllocation is Ownable {
     address public liquidityFund;
     address public treasury;
 
-    mapping(address => uint256) public advisorsBalances;
-    mapping(address => uint256) public teamBalances;
-
-    AdvisorsAllocation[] public allocations;
-
-    TeamsAllocation[] public team;
-
     GigToken public token;
-
     CrowdSale public ico;
 
-    //status - 0 new
-    //status - 1 sent
-    //status - 2 removed
-
-    struct AdvisorsAllocation {
-        address holderAddress;
-        uint256 amount;
-        uint8 status;
+    struct Allocation {
+        uint256 balance; // locked balance to unlock
+        uint256 periodDuration; // seconds, e.g. 1 month = 2629743 secs
+        uint256 periods; // number of periods, e.g. 12 months for unlocking = 12
     }
 
-    struct TeamsAllocation {
-        address holderAddress;
-        uint256 amount;
-        uint8 status;
+    mapping(address => Allocation) allocations;
+
+    mapping(address => bool) trustedAddresses;
+    mapping(address => uint256) burnableBalances;
+
+    modifier onlyTrustedAddress(address _address) {
+        require(trustedAddresses[_address] == true);
+        _;
     }
 
     function GigAllocation(
         address _token,
-        address _ico,
+        address _crowdSale,
         uint256 _remainingTokens, //150000000000000000000000000
         address _ecosystemIncentive,
         address _marketingBounty,
         address _liquidityFund,
         address _treasury
     ) public {
-        require(_token != address(0) && _ico != address(0));
+        require(_token != address(0) && _crowdSale != address(0));
         token = GigToken(_token);
-        ico = CrowdSale(_ico);
+        ico = CrowdSale(_crowdSale);
         remainingTokens = _remainingTokens;
         ecosystemIncentive = _ecosystemIncentive;
         marketingBounty = _marketingBounty;
         liquidityFund = _liquidityFund;
         treasury = _treasury;
+        unlockTime = ico.endTime() + 1 years;
 
     }
 
@@ -76,37 +70,6 @@ contract GigAllocation is Ownable {
     function setICO(address _ico) public onlyOwner {
         require(_ico != address(0));
         ico = CrowdSale(_ico);
-    }
-
-    function removeAdvisorsTier(uint256 _id) public onlyOwner {
-        if (allocations[_id].status == 1) {
-            return;
-        }
-        AdvisorsAllocation storage allocation = allocations[_id];
-        allocation.status = 2;
-        remainingTokens = remainingTokens.add(allocation.amount);
-    }
-
-    function removeTeamTier(uint256 _id) public onlyOwner {
-        if (team[_id].status == 1) {
-            return;
-        }
-        TeamsAllocation storage teamConfig = team[_id];
-        teamConfig.status = 2;
-        remainingTokens = remainingTokens.add(teamConfig.amount);
-    }
-
-    function burnAdviserOrTeamMemberTokens(address _holder) public onlyOwner {
-        uint256 amount = advisorsBalances[_holder].add(teamBalances[_holder]);
-        if (amount <= token.balanceOf(_holder)) {
-            if (amount > 0) {
-                require(amount == token.burnInvestorTokens(_holder, amount));
-                remainingTokens = remainingTokens.add(amount);
-                advisorsBalances[_holder] = 0;
-                teamBalances[_holder] = 0;
-            }
-        }
-
     }
 
     function sendEcosystemIncentiveTokens() public onlyOwner {
@@ -137,85 +100,94 @@ contract GigAllocation is Ownable {
         }
     }
 
-    function setAllocation(uint256 _amount, address[] _addresses) public onlyOwner returns (bool) {
-        require(remainingTokens > 0 && _amount > 0 && _addresses.length >= 1);
-        require(_amount.mul(uint256(_addresses.length)) <= remainingTokens);
-
-        for (uint8 i = 0; i < _addresses.length; i++) {
-            require(_addresses[i] != address(0));
-            allocations.push(AdvisorsAllocation(_addresses[i], _amount, 0));
-            remainingTokens = remainingTokens.sub(_amount);
-        }
-        return true;
+    function updateTrustedAddressStatus(address _address, bool _status) public onlyOwner {
+        require(_address != address(0));
+        trustedAddresses[_address] = _status;
     }
 
-    function setTeamAllocation(uint256 _amount, address[] _addresses) public onlyOwner returns (bool) {
-        require(remainingTokens > 0 && _amount > 0 && _addresses.length >= 1);
-        require(_amount.mul(uint256(_addresses.length)) <= remainingTokens);
-
-        for (uint8 i = 0; i < _addresses.length; i++) {
-            require(_addresses[i] != address(0));
-            team.push(TeamsAllocation(_addresses[i], _amount, 0));
-            remainingTokens = remainingTokens.sub(_amount);
-        }
-
-        return true;
+    // allocate team token
+    function allocateTeamToken(address _holderAddress, uint256 _tokens) public onlyOwner {
+        require(remainingTokens > 0 && _tokens > 0 && _tokens <= remainingTokens);
+        remainingTokens = remainingTokens.sub(_tokens);
+        require(_tokens == token.mint(_holderAddress, _tokens));
+        internalAllocateToken(_holderAddress, _tokens, 1 years, 3);
+        burnableBalances[_holderAddress] = burnableBalances[_holderAddress].add(_tokens);
     }
 
-    function allocate() public onlyOwner {
-        allocateAdvisors();
-        allocateTeam();
+    // allocate advisors token
+    function allocateAdvisorsToken(address _holderAddress, uint256 _tokens) public onlyOwner {
+        require(remainingTokens > 0 && _tokens > 0 && _tokens <= remainingTokens);
+        remainingTokens = remainingTokens.sub(_tokens);
+        require(_tokens == token.mint(_holderAddress, _tokens));
+        internalAllocateToken(_holderAddress, _tokens, 1 years, 2);
+        burnableBalances[_holderAddress] = burnableBalances[_holderAddress].add(_tokens);
     }
 
-    function isTransferAllowed(address _from, uint256 _value) public view returns (bool status){
-        uint256 lockedBalance = advisorsBalances[_from];
-        if (ico.endTime().add(1 years) <= block.timestamp && lockedBalance > 0) {
-            if (ico.endTime().add(2 years) <= block.timestamp) {
-                lockedBalance = 0;
+    // only team's or advisor's tokens can be burned
+    function burnAllocatedTokens(address _holderAddress) public onlyOwner returns (bool){
+        uint256 amount = burnableBalances[_holderAddress];
+        if (amount > 0 && amount <= token.balanceOf(_holderAddress)) {
+            require(amount == token.burnInvestorTokens(_holderAddress, amount));
+            remainingTokens = remainingTokens.add(amount);
+            burnableBalances[_holderAddress] = 0;
+            if (allocations[_holderAddress].balance <= amount) {
+                delete (allocations[_holderAddress]);
+                return true;
             }
-            lockedBalance = advisorsBalances[_from].div(2);
+            Allocation storage allocation = allocations[_holderAddress];
+            allocation.balance = allocation.balance.sub(amount);
         }
-        if (teamBalances[_from] > 0 && ico.endTime().add(3 years) > block.timestamp) {
-            lockedBalance = lockedBalance.add(teamBalances[_from]);
-            if (ico.endTime().add(1 years) <= block.timestamp) {
-                lockedBalance = lockedBalance.sub(teamBalances[_from].div(3));
-            } else if (ico.endTime().add(2 years) <= block.timestamp) {
-                lockedBalance = lockedBalance.sub(teamBalances[_from].mul(2).div(3));
-            }
+    }
 
-        }
-        if (token.balanceOf(_from) - lockedBalance >= _value) {
+    // should be called by private sale & pre ico contracts
+    function allocateToken(
+        address _holderAddress,
+        uint256 _tokens,
+        uint256 _periodDuration,
+        uint256 _periods
+    ) public onlyTrustedAddress(msg.sender) {
+        internalAllocateToken(_holderAddress, _tokens, _periodDuration, _periods);
+    }
+
+    function isLocked(address _address) public view returns (bool){
+        return allocations[_address].balance > 0;
+    }
+
+    // should be called by token contract
+    function isAllowedToTransfer(address _holderAddress, uint256 _addressBalance, uint256 _tokensToTransfer) public view returns (bool) {
+        Allocation memory allocation = allocations[_holderAddress];
+
+        require(block.timestamp > unlockTime);
+
+        // unlockTime = end of ico + 1 year
+        uint256 secsFromUnlock = now - unlockTime;
+
+        uint256 tokensPerPeriod = allocation.balance / allocation.periods;
+
+        uint256 periodsEnded = secsFromUnlock / allocation.periodDuration;
+
+        if (periodsEnded >= allocation.periods) {
             return true;
         }
-        return false;
-    }
 
-    function allocateAdvisors() internal {
-        for (uint256 i = 0; i < allocations.length; i++) {
-            if (0 != allocations[i].status) {
-                continue;
-            }
-            AdvisorsAllocation storage allocation = allocations[i];
-            allocation.status = 1;
+        uint256 lockedBalance = allocation.balance - tokensPerPeriod * periodsEnded;
 
-            require(allocation.amount == token.mint(allocation.holderAddress, allocation.amount));
-            advisorsBalances[allocation.holderAddress] = advisorsBalances[allocation.holderAddress].add(allocation.amount);
+        if (_addressBalance < lockedBalance || _addressBalance - lockedBalance < _tokensToTransfer) {
+            return false;
         }
+
+        return true;
     }
 
-    function allocateTeam() internal {
-        for (uint256 i = 0; i < team.length; i++) {
+    function internalAllocateToken(address _holderAddress, uint256 _tokens, uint256 _periodDuration, uint256 _periods) internal {
+        Allocation storage allocation = allocations[_holderAddress];
 
-            if (0 != team[i].status) {
-                continue;
-            }
-            TeamsAllocation storage teamConfig = team[i];
-            teamConfig.status = 1;
+        require(_periods == 0 || allocation.periods == _periods);
+        require(_periodDuration == 0 || allocation.periodDuration == _periodDuration);
 
-            require(teamConfig.amount == token.mint(teamConfig.holderAddress, teamConfig.amount));
-            teamBalances[teamConfig.holderAddress] = teamBalances[teamConfig.holderAddress].add(teamConfig.amount);
-        }
+        allocation.periods = _periods;
+        allocation.periodDuration = _periodDuration;
+
+        allocation.balance = allocation.balance.add(_tokens);
     }
-
-
 }

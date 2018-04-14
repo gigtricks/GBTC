@@ -1,7 +1,6 @@
 pragma solidity 0.4.19;
 
 import "./SellableToken.sol";
-//import "./PrivateSale.sol";
 
 
 contract CrowdSale is SellableToken {
@@ -9,6 +8,7 @@ contract CrowdSale is SellableToken {
     uint8 public constant PRE_ICO_TIER_LAST = 4;
     uint8 public constant ICO_TIER_FIRST = 5;
     uint8 public constant ICO_TIER_LAST = 12;
+    uint8 public constant LOCK_BALANCES_TO = 3;
 
     SellableToken public privateSale;
 
@@ -23,7 +23,6 @@ contract CrowdSale is SellableToken {
         uint256 collectedEthers;
         bool burned;
     }
-
 
     function CrowdSale(
         address _token,
@@ -360,10 +359,15 @@ contract CrowdSale is SellableToken {
         (tokenAmount, usdAmount) = calculateTokensAmount(_value);
 
         if (activeTier >= PRE_ICO_TIER_FIRST && activeTier <= PRE_ICO_TIER_LAST) {
+            if (address(allocation) == address(0)) {
+                return false;
+            }
             mintedAmount = mintPreICO(_address, tokenAmount, _value, usdAmount);
 
             require(usdAmount > 0 && mintedAmount > 0);
-
+            if (activeTier <= LOCK_BALANCES_TO) {
+                allocation.allocateToken(_address, _value, MONTH_IN_SEC, 1 years);
+            }
             etherHolder.transfer(this.balance);
         } else {
             mintedAmount = mintInternal(_address, tokenAmount);

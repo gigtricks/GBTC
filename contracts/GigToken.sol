@@ -1,27 +1,24 @@
 pragma solidity 0.4.19;
 
 import "./MintingERC20.sol";
-import "./SellableToken.sol";
+import "./CrowdSale.sol";
 import "./GigAllocation.sol";
 
 
 contract GigToken is MintingERC20 {
 
-    SellableToken public ico;
-    SellableToken public privateSale;
+    CrowdSale public ico;
     GigAllocation public allocations;
 
     bool public transferFrozen = true;
-    mapping(address => uint256) public lockedHolders;
-
-    modifier onlySellable() {
-        require(msg.sender == address(ico) || msg.sender == address(privateSale));
+    mapping(address => bool) trustedBurners;
+    modifier onlyTrustedBurnersAddress(address _address) {
+        require(trustedBurners[_address] == true);
         _;
     }
 
-    function GigToken(
-        bool _locked
-    ) public MintingERC20(0, maxSupply, "GigBit", 18, "GBTC", false, _locked)
+    function GigToken(bool _locked) public
+    MintingERC20(0, maxSupply, "GigBit", 18, "GBTC", false, _locked)
     {
         standard = "GBTC 0.1";
         maxSupply = uint256(1000000000).mul(uint256(10) ** decimals);
@@ -29,17 +26,20 @@ contract GigToken is MintingERC20 {
 
     function setICO(address _ico) public onlyOwner {
         require(_ico != address(0));
-        ico = SellableToken(_ico);
+        ico = CrowdSale(_ico);
+        trustedBurners[_ico] = true;
     }
 
-    function setPrivateSale(address _privateSale) public onlyOwner {
-        require(_privateSale != address(0));
-        privateSale = SellableToken(_privateSale);
+    // privateSale, CrowdSale, Allocation contracts
+    function updateBurnerAddresses(address _address, bool _status) public onlyOwner {
+        require(_address != address(0));
+        trustedBurners[_address] = _status;
     }
 
     function setAllocationContract(address _allocations) public onlyOwner {
         require(_allocations != address(0));
         allocations = GigAllocation(_allocations);
+        trustedBurners[_allocations] = true;
     }
 
     function freezing(bool _transferFrozen) public onlyOwner {
@@ -48,7 +48,7 @@ contract GigToken is MintingERC20 {
 
     function isTransferAllowed(address _from, uint256 _value) public view returns (bool status) {
         return !transferFrozen
-        && allocations.isTransferAllowed(_from, _value)
+        && allocations.isAllowedToTransfer(_from, balanceOf(_from), _value)
         && ico.isTransferAllowed(_from, _value);
     }
 
@@ -64,14 +64,14 @@ contract GigToken is MintingERC20 {
         return super.transferFrom(_from, _to, _value);
     }
 
-    function burnInvestorTokens(address _address, uint256 _amount) public returns (uint256) {
-        if (address(ico) == msg.sender || address(privateSale) == msg.sender ||  address(allocations) == msg.sender) {
-            return burnInternal(_address, _amount);
-        }
-        return 0;
+    function burnInvestorTokens(
+        address _address,
+        uint256 _amount
+    ) public onlyTrustedBurnersAddress(msg.sender) returns (uint256) {
+        return burnInternal(_address, _amount);
     }
 
-    function burnUnsoldTokens(uint256 _amount) public onlySellable {
+    function burnUnsoldTokens(uint256 _amount) public onlyTrustedBurnersAddress(msg.sender) {
         Transfer(address(this), address(0), maxSupply.sub(_amount));
         maxSupply = maxSupply.sub(_amount);
     }

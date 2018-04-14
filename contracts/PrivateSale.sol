@@ -2,7 +2,6 @@ pragma solidity 0.4.19;
 
 
 import "./SellableToken.sol";
-//import "./Crowdsale.sol";
 
 
 contract PrivateSale is SellableToken {
@@ -117,12 +116,8 @@ contract PrivateSale is SellableToken {
         return;
     }
 
-    function isTransferAllowed(address, uint256) public view returns (bool status){
-        return false;
-    }
-
     function buy(address _address, uint256 _value) internal returns (bool) {
-        if (_value == 0 || _address == address(0)) {
+        if (_value == 0 || _address == address(0) || address(allocation) == address(0)) {
             return false;
         }
 
@@ -137,6 +132,7 @@ contract PrivateSale is SellableToken {
 
         collectedEthers = collectedEthers.add(_value);
         etherBalances[_address] = etherBalances[_address].add(_value);
+        allocation.allocateToken(_address, _value, MONTH_IN_SEC, 1 years);
         transferEthers();
         Contribution(_address, _value, tokenAmount);
         return true;

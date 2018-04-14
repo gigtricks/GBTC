@@ -3,11 +3,14 @@ pragma solidity 0.4.19;
 
 import "./GigToken.sol";
 import "./Multivest.sol";
+import "./GigAllocation.sol";
 
 
 contract SellableToken is Multivest {
 
+    uint256 public constant MONTH_IN_SEC = 2629743;
     GigToken public token;
+    GigAllocation public allocation;
 
     uint256 public minPurchase = 100 * 10 ** 5;
     uint256 public maxPurchase;
@@ -74,6 +77,12 @@ contract SellableToken is Multivest {
         token = GigToken(_token);
     }
 
+    function setAllocationContract(address _allocation) public onlyOwner {
+        require(_allocation != address(0));
+        allocation = GigAllocation(_allocation);
+    }
+
+
     function setEtherHolder(address _etherHolder) public onlyOwner {
         if (_etherHolder != address(0)) {
             etherHolder = _etherHolder;
@@ -90,8 +99,6 @@ contract SellableToken is Multivest {
     function mint(address _address, uint256 _tokenAmount) public onlyOwner returns (uint256) {
         return mintInternal(_address, _tokenAmount);
     }
-
-    function isTransferAllowed(address _from, uint256 _value) public view returns (bool status);
 
     function isActive() public view returns (bool);
 
