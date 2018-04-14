@@ -58,10 +58,31 @@ contract GigToken is MintingERC20 {
     }
 
     function transferFrom(address _from, address _to, uint _value) public returns (bool success) {
-        if (!isTransferAllowed(_from, _value)) {
+        if (ico.endTime() > block.timestamp || !isTransferAllowed(_from, _value)) {
             return false;
         }
         return super.transferFrom(_from, _to, _value);
+    }
+
+    function approve(address _spender, uint256 _value) public returns (bool success) {
+        if (ico.endTime() > block.timestamp) {
+            return false;
+        }
+        return super.approve(_spender, _value);
+    }
+
+    function increaseApproval(address _spender, uint _addedValue) public returns (bool success) {
+        if (ico.endTime() > block.timestamp) {
+            return false;
+        }
+        return super.increaseApproval(_spender, _addedValue);
+    }
+
+    function decreaseApproval(address _spender, uint _subtractedValue) public returns (bool success) {
+        if (ico.endTime() > block.timestamp) {
+            return false;
+        }
+        return super.decreaseApproval(_spender, _subtractedValue);
     }
 
     function burnInvestorTokens(
