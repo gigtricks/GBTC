@@ -274,9 +274,6 @@ contract CrowdSale is SellableToken {
 
     function isTransferAllowed(address _from, uint256 _value) public view returns (bool status){
         uint8 activeTier = getActiveTier();
-        if (activeTier == tiers.length) {
-            return false;
-        }
         if (activeTier >= PRE_ICO_TIER_FIRST && activeTier <= PRE_ICO_TIER_LAST) {
             return true;
         }

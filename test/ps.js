@@ -140,7 +140,7 @@ contract('PrivateSale', function (accounts) {
         await makeTransactionKYC(privateico, wrongSigAddress, accounts[0], new BigNumber('1').mul(precision).valueOf())
             .then(Utils.receiptShouldFailed)
             .catch(Utils.catchReceiptShouldFailed);
-        //10 ^ 18 * 119493000 / 24800 * 175/100 = 8431965725806451612903
+        //((10 ^ 18) * (1194.93 * 10 ^ 5) / (0.2480 * 10 ^ 5*(100-75)/100)) = 19273064516129032258064
         await makeTransactionKYC(privateico, signAddress, accounts[0], new BigNumber('1').mul(precision).valueOf())
             .then(Utils.receiptShouldSucceed);
         await makeTransactionKYC(privateico, signAddress, accounts[0], new BigNumber('0').mul(precision).valueOf())
@@ -152,7 +152,7 @@ contract('PrivateSale', function (accounts) {
         await Utils.checkState({privateico, token}, {
             token: {
                 balanceOf: [
-                    {[accounts[0]]: new BigNumber('8431965725806451612903').valueOf()},
+                    {[accounts[0]]: new BigNumber('19273064516129032258064').valueOf()},
                 ],
             },
             privateico: {
@@ -164,7 +164,7 @@ contract('PrivateSale', function (accounts) {
                 startTime: icoSince,
                 endTime: icoTill,
                 maxTokenSupply: new BigNumber('350000000').mul(precision).valueOf(),
-                soldTokens: new BigNumber('8431965725806451612903').valueOf(),
+                soldTokens: new BigNumber('19273064516129032258064').valueOf(),
                 collectedEthers: new BigNumber('1').mul(precision).valueOf(),
                 etherHolder: etherHolder,
                 collectedUSD: new BigNumber('1194.93').mul(usdPrecision).valueOf(),
@@ -196,7 +196,7 @@ contract('PrivateSale', function (accounts) {
         //
         await privateico.moveUnsoldTokens();
         await ico.setPrivateSale(privateico.address);
-        // assert.equal(await ico.isTransferAllowed.call(accounts[0],  new BigNumber('8431965725806451612903').valueOf()), true, "isTransferAllowed is not equal");
+        // assert.equal(await ico.isTransferAllowed.call(accounts[0],  new BigNumber('19273064516129032258064').valueOf()), true, "isTransferAllowed is not equal");
         await privateico.changeSalePeriod(icoSince - 3600 * 5, icoSince - 3600);
         assert.equal(await privateico.withinPeriod.call(), false, 'withinPeriod is not equal');
         assert.equal(await privateico.isActive.call(), false, 'isActive is not equal');
@@ -204,7 +204,7 @@ contract('PrivateSale', function (accounts) {
         await Utils.checkState({privateico, token, ico}, {
             token: {
                 balanceOf: [
-                    {[accounts[0]]: new BigNumber('8431965725806451612903').valueOf()},
+                    {[accounts[0]]: new BigNumber('19273064516129032258064').valueOf()},
                 ],
             },
             privateico: {
@@ -215,8 +215,8 @@ contract('PrivateSale', function (accounts) {
                 hardCap: new BigNumber('0').mul(usdPrecision).valueOf(),
                 startTime: icoSince - 3600 * 5,
                 endTime: icoSince - 3600,
-                maxTokenSupply: new BigNumber('8431965725806451612903').valueOf(),
-                soldTokens: new BigNumber('8431965725806451612903').valueOf(),
+                maxTokenSupply: new BigNumber('19273064516129032258064').valueOf(),
+                soldTokens: new BigNumber('19273064516129032258064').valueOf(),
                 collectedEthers: new BigNumber('1').mul(precision).valueOf(),
                 etherHolder: etherHolder,
                 collectedUSD: new BigNumber('1194.93').mul(usdPrecision).valueOf(),
@@ -232,16 +232,16 @@ contract('PrivateSale', function (accounts) {
                 ]
             },
             ico: {
-                maxTokenSupply: new BigNumber('350000000').mul(precision).sub('8431965725806451612903').valueOf(),
+                maxTokenSupply: new BigNumber('350000000').mul(precision).sub('19273064516129032258064').valueOf(),
             }
 
         });
         await privateico.setEtherInUSD('194.93000');
-        assert.equal(await privateico.isTransferAllowed.call(accounts[0], 0), true, 'isTransferAllowed is not equal');
+        assert.equal(await privateico.isTransferAllowed.call(accounts[0], 0), false, 'isTransferAllowed is not equal');
         await Utils.checkState({privateico, token, ico}, {
             token: {
                 balanceOf: [
-                    {[accounts[0]]: new BigNumber('8431965725806451612903').valueOf()},
+                    {[accounts[0]]: new BigNumber('19273064516129032258064').valueOf()},
                 ],
             },
             privateico: {
@@ -252,8 +252,8 @@ contract('PrivateSale', function (accounts) {
                 hardCap: new BigNumber('0').mul(usdPrecision).valueOf(),
                 startTime: icoSince - 3600 * 5,
                 endTime: icoSince - 3600,
-                maxTokenSupply: new BigNumber('8431965725806451612903').valueOf(),
-                soldTokens: new BigNumber('8431965725806451612903').valueOf(),
+                maxTokenSupply: new BigNumber('19273064516129032258064').valueOf(),
+                soldTokens: new BigNumber('19273064516129032258064').valueOf(),
                 collectedEthers: new BigNumber('1').mul(precision).valueOf(),
                 etherHolder: etherHolder,
                 collectedUSD: new BigNumber('1194.93').mul(usdPrecision).valueOf(),
@@ -269,7 +269,7 @@ contract('PrivateSale', function (accounts) {
                 ]
             },
             ico: {
-                maxTokenSupply: new BigNumber('350000000').mul(precision).sub('8431965725806451612903').valueOf(),
+                maxTokenSupply: new BigNumber('350000000').mul(precision).sub('19273064516129032258064').valueOf(),
             }
 
         });
@@ -311,8 +311,8 @@ contract('PrivateSale', function (accounts) {
         assert.equal(await privateico.isActive.call(), true, 'withinPeriod is not equal');
         await  privateico.multivestBuy(accounts[0], new BigNumber('1').mul(precision).valueOf(),{from: signAddress})
             .then(Utils.receiptShouldSucceed);
-        await  privateico.setAllowedMultivest(accounts[8])
-        await  privateico.multivestBuy(accounts[0], new BigNumber('1').mul(precision).valueOf(),{from: accounts[8]})
+        await  privateico.setAllowedMultivest(accounts[6])
+        await  privateico.multivestBuy(accounts[0], new BigNumber('1').mul(precision).valueOf(),{from: accounts[6]})
             .then(Utils.receiptShouldSucceed);
         await  privateico.multivestBuy(accounts[0], new BigNumber('1').mul(precision).valueOf(),{from: wrongSigAddress})
             .then(Utils.receiptShouldFailed)

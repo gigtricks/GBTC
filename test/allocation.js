@@ -96,7 +96,7 @@ contract('Allocations', function (accounts) {
 
     });
 
-    it('check Allocation & claim & allocate', async function () {
+    it('check setAllocation advisors & team & allocate', async function () {
         const {token, privateico, preico, ico, allocations} = await deploy();
 
         await Utils.checkState({allocations}, {
