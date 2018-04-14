@@ -113,7 +113,7 @@ contract PrivateSale is SellableToken {
     }
 
     function setMaxTokenSupply(uint256) public {
-        return;
+        require(false);
     }
 
     function buy(address _address, uint256 _value) internal returns (bool) {
