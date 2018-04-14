@@ -131,7 +131,6 @@ contract PrivateSale is SellableToken {
         collectedUSD = collectedUSD.add(usdAmount);
         require(usdAmount > 0 && mintedAmount > 0);
 
-        etherHolder.transfer(this.balance);
         collectedEthers = collectedEthers.add(_value);
         etherBalances[_address] = etherBalances[_address].add(_value);
         transferEthers();
