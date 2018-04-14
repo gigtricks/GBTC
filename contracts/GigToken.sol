@@ -10,7 +10,7 @@ contract GigToken is MintingERC20 {
     CrowdSale public ico;
     GigAllocation public allocations;
 
-    bool public transferFrozen = true;
+    bool public transferFrozen = false;
     mapping(address => bool) trustedBurners;
     modifier onlyTrustedBurnersAddress(address _address) {
         require(trustedBurners[_address] == true);
