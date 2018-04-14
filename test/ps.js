@@ -275,4 +275,50 @@ contract('PrivateSale', function (accounts) {
         });
     });
 
+    it("deploy & check MultivestBuy", async function () {
+        const {token, privateico} = await deploy();
+
+        await Utils.checkState({privateico, token}, {
+            privateico: {
+                price: new BigNumber('0.2480').mul(usdPrecision).valueOf(),
+                token: token.address,
+                minPurchase: new BigNumber('100').mul(usdPrecision).valueOf(),
+                maxPurchase: new BigNumber('0').mul(precision).valueOf(),
+                softCap: new BigNumber('0').mul(usdPrecision).valueOf(),
+                hardCap: new BigNumber('0').mul(usdPrecision).valueOf(),
+                startTime: icoSince,
+                endTime: icoTill,
+                maxTokenSupply: new BigNumber('350000000').mul(precision).valueOf(),
+                soldTokens: 0,
+                collectedEthers: 0,
+                etherHolder: etherHolder,
+                collectedUSD: 0,
+                etherPriceInUSD: new BigNumber('1194.93').mul(usdPrecision).valueOf(),
+                etherBalances: [
+                    {[accounts[0]]: 0},
+                    {[accounts[1]]: 0},
+                ],
+                allowedMultivests: [
+                    {[signAddress]: true},
+                    {[accounts[1]]: false},
+                ]
+            }
+        });
+
+
+
+        assert.equal(await privateico.withinPeriod.call(), true, 'withinPeriod is not equal');
+        assert.equal(await privateico.isActive.call(), true, 'withinPeriod is not equal');
+        await  privateico.multivestBuy(accounts[0], new BigNumber('1').mul(precision).valueOf(),{from: signAddress})
+            .then(Utils.receiptShouldSucceed);
+        await  privateico.setAllowedMultivest(accounts[8])
+        await  privateico.multivestBuy(accounts[0], new BigNumber('1').mul(precision).valueOf(),{from: accounts[8]})
+            .then(Utils.receiptShouldSucceed);
+        await  privateico.multivestBuy(accounts[0], new BigNumber('1').mul(precision).valueOf(),{from: wrongSigAddress})
+            .then(Utils.receiptShouldFailed)
+        .catch(Utils.catchReceiptShouldFailed);
+
+
+    });
+
 });

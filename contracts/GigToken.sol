@@ -1,4 +1,4 @@
-pragma solidity 0.4.21;
+pragma solidity 0.4.19;
 
 import "./MintingERC20.sol";
 import "./SellableToken.sol";

@@ -1,4 +1,4 @@
-pragma solidity 0.4.21;
+pragma solidity 0.4.19;
 
 import "./SellableToken.sol";
 //import "./PrivateSale.sol";
@@ -200,9 +200,9 @@ contract CrowdSale is SellableToken {
             }
         }
         usdAmount = _value.mul(etherPriceInUSD);
-        
+
         tokenAmount = usdAmount.div(price * (100 - tiers[activeTier].discount) / 100);
-        
+
         usdAmount = usdAmount.div(uint256(10) ** 18);
 
         if (usdAmount < minPurchase) {
@@ -211,7 +211,7 @@ contract CrowdSale is SellableToken {
     }
 
     function calculateEthersAmount(uint256 _tokens) public view returns (uint256 ethers, uint256 discount) {
-        if (_tokens == 0 || _tokens < minPurchase) {
+        if (_tokens == 0 ) {
             return (0, 0);
         }
 
@@ -227,6 +227,10 @@ contract CrowdSale is SellableToken {
         }
 
         ethers = _tokens.mul(price).div(etherPriceInUSD);
+
+        if( ethers < getMinEthersInvestment()){
+            return (0, 0);
+        }
 
         uint256 usdAmount = ethers.mul(etherPriceInUSD);
 
@@ -301,10 +305,12 @@ contract CrowdSale is SellableToken {
         if (burnedAmount == 0) {
             return false;
         }
+
+        etherBalances[msg.sender] = 0;
+
         msg.sender.transfer(etherBalances[msg.sender]);
 
         Refund(msg.sender, etherBalances[msg.sender], burnedAmount);
-        etherBalances[msg.sender] = 0;
 
         return true;
     }
@@ -319,7 +325,6 @@ contract CrowdSale is SellableToken {
         if (collectedUSD >= softCap) {
             etherHolder.transfer(this.balance);
         }
-
     }
 
     function mintPreICO(
@@ -361,6 +366,7 @@ contract CrowdSale is SellableToken {
             mintedAmount = mintPreICO(_address, tokenAmount, _value, usdAmount);
 
             require(usdAmount > 0 && mintedAmount > 0);
+
             etherHolder.transfer(this.balance);
         } else {
             mintedAmount = mintInternal(_address, tokenAmount);

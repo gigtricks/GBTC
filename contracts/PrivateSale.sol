@@ -1,4 +1,4 @@
-pragma solidity 0.4.21;
+pragma solidity 0.4.19;
 
 
 import "./SellableToken.sol";
@@ -67,11 +67,15 @@ contract PrivateSale is SellableToken {
     }
 
     function calculateEthersAmount(uint256 _tokens) public view returns (uint256 ethers, uint256 bonus) {
-        if (_tokens == 0 || _tokens < minPurchase) {
+        if (_tokens == 0) {
             return (0, 0);
         }
 
         ethers = _tokens.mul(price).div(etherPriceInUSD);
+
+        if( ethers < getMinEthersInvestment()){
+            return (0, 0);
+        }
 
         uint256 usdAmount = ethers.mul(etherPriceInUSD);
 
@@ -114,7 +118,7 @@ contract PrivateSale is SellableToken {
     }
 
     function isTransferAllowed(address, uint256) public view returns (bool status){
-        return true;
+        return false;
     }
 
     function buy(address _address, uint256 _value) internal returns (bool) {

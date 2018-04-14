@@ -54,6 +54,7 @@
     "mocha-multi-reporters": "^1.1.7",
     "solhint": "^1.1.10",
     "solidity-coverage": "^0.2.7",
-    "solium": "^1.1.5"
+    "solium": "^1.1.5",
+    "truffle-hdwallet-provider": "^0.0.3"
   }
 }
