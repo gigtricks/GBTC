@@ -78,10 +78,10 @@ contract GigAllocation is Ownable {
         address _liquidityFund,
         address _treasury
     ) public onlyOwner {
-        remainingTokens = _remainingTokens;
         ecosystemIncentive = _ecosystemIncentive;
         marketingBounty = _marketingBounty;
         liquidityFund = _liquidityFund;
+        treasury = _treasury;
     }
 
     function sendEcosystemIncentiveTokens() public onlyOwner {
