@@ -19,6 +19,7 @@ contract CrowdSale is SellableToken {
 
     struct Stats {
         uint256 soldTokens;
+        uint256 maxTokenSupply;
         uint256 collectedUSD;
         uint256 collectedEthers;
         bool burned;
@@ -27,7 +28,8 @@ contract CrowdSale is SellableToken {
     function CrowdSale(
         address _token,
         address _etherHolder,
-        uint256 _maxTokenSupply,
+        uint256 _maxPreICOTokenSupply,  //248500000000000000000000000
+        uint256 _maxICOTokenSupply, //87500000000000000000000000
         uint256 _price,
         uint256 _startTime,
         uint256 _endTime,
@@ -38,12 +40,13 @@ contract CrowdSale is SellableToken {
         _etherHolder,
         _startTime,
         _endTime,
-        _maxTokenSupply,
+        _maxPreICOTokenSupply.add(_maxICOTokenSupply),
         _etherPriceInUSD
     ) {
         softCap = 500000000000;
         hardCap = 5010477900000;
         price = _price;
+        preICOStats.maxTokenSupply = _maxPreICOTokenSupply;
         //0.2480* 10^5
         //PreICO
         tiers.push(
@@ -153,7 +156,7 @@ contract CrowdSale is SellableToken {
     }
 
     function isActive() public view returns (bool) {
-        if (hardCap == collectedUSD) {
+        if (hardCap == collectedUSD.add(preICOStats.collectedUSD)) {
             return false;
         }
         if (soldTokens == maxTokenSupply) {
@@ -209,7 +212,7 @@ contract CrowdSale is SellableToken {
     }
 
     function calculateEthersAmount(uint256 _tokens) public view returns (uint256 ethers, uint256 discount) {
-        if (_tokens == 0 ) {
+        if (_tokens == 0) {
             return (0, 0);
         }
 
@@ -226,7 +229,7 @@ contract CrowdSale is SellableToken {
 
         ethers = _tokens.mul(price).div(etherPriceInUSD);
 
-        if( ethers < getMinEthersInvestment()){
+        if (ethers < getMinEthersInvestment()) {
             return (0, 0);
         }
 
@@ -247,7 +250,7 @@ contract CrowdSale is SellableToken {
         uint256[39] tiersData
     ) {
         sold = soldTokens;
-        maxSupply = maxTokenSupply;
+        maxSupply = maxTokenSupply.sub(preICOStats.maxTokenSupply);
         min = minPurchase;
         soft = softCap;
         hard = hardCap;
@@ -271,12 +274,8 @@ contract CrowdSale is SellableToken {
     }
 
     function isTransferAllowed(address _from, uint256 _value) public view returns (bool status){
-        uint8 activeTier = getActiveTier();
-        if (activeTier > LOCK_BALANCES_TO && activeTier <= PRE_ICO_TIER_LAST) {
-            return true;
-        }
-        if (collectedUSD < softCap) {
-            if (token.balanceOf(_from) - icoBalances[_from] > _value) {
+        if (collectedUSD.add(preICOStats.collectedUSD) < softCap) {
+            if (token.balanceOf(_from) >= icoBalances[_from] && token.balanceOf(_from) - icoBalances[_from] > _value) {
                 return true;
             }
             return false;
@@ -285,7 +284,7 @@ contract CrowdSale is SellableToken {
     }
 
     function isRefundPossible() public view returns (bool) {
-        if (isActive() || block.timestamp < startTime || collectedUSD >= softCap) {
+        if (isActive() || block.timestamp < startTime || collectedUSD.add(preICOStats.collectedUSD) >= softCap) {
             return false;
         }
         return true;
@@ -310,14 +309,22 @@ contract CrowdSale is SellableToken {
         return true;
     }
 
-    function setMaxTokenSupply(uint256 _amount) public {
+    function updatePreICOMaxTokenSupply(uint256 _amount) public {
         if (msg.sender == address(privateSale)) {
-            maxTokenSupply = _amount;
+            maxTokenSupply = maxTokenSupply.add(_amount);
+            preICOStats.maxTokenSupply = preICOStats.maxTokenSupply.add(_amount);
+        }
+    }
+
+    function moveUnsoldTokensToICO() public onlyOwner {
+        uint256 unsoldTokens = preICOStats.maxTokenSupply - preICOStats.soldTokens;
+        if (unsoldTokens > 0) {
+            preICOStats.maxTokenSupply = preICOStats.soldTokens;
         }
     }
 
     function transferEthers() internal {
-        if (collectedUSD >= softCap) {
+        if (collectedUSD.add(preICOStats.collectedUSD) >= softCap) {
             etherHolder.transfer(this.balance);
         }
     }
@@ -336,6 +343,7 @@ contract CrowdSale is SellableToken {
         preICOStats.collectedEthers = preICOStats.collectedEthers.add(_ethAmount);
         preICOStats.collectedUSD = preICOStats.collectedUSD.add(_usdAmount);
 
+        require(preICOStats.maxTokenSupply >= preICOStats.soldTokens);
         require(maxTokenSupply >= preICOStats.soldTokens);
 
         return _tokenAmount;
@@ -370,8 +378,9 @@ contract CrowdSale is SellableToken {
             etherHolder.transfer(this.balance);
         } else {
             mintedAmount = mintInternal(_address, tokenAmount);
+            require(soldTokens <= maxTokenSupply.sub(preICOStats.maxTokenSupply));
             collectedUSD = collectedUSD.add(usdAmount);
-            require(hardCap >= collectedUSD && usdAmount > 0 && mintedAmount > 0);
+            require(hardCap >= collectedUSD.add(preICOStats.collectedUSD) && usdAmount > 0 && mintedAmount > 0);
 
             transferEthers();
             collectedEthers = collectedEthers.add(_value);

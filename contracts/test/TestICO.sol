@@ -9,7 +9,8 @@ contract TestICO is CrowdSale {
     function TestICO(
         address _token,
         address _etherHolder,
-        uint256 _maxTokenSupply,
+        uint256 _maxPreICOTokenSupply,  //248500000000000000000000000
+        uint256 _maxICOTokenSupply, //87500000000000000000000000
         uint256 _price,
         uint256 _startTime,
         uint256 _endTime,
@@ -17,7 +18,8 @@ contract TestICO is CrowdSale {
     ) public CrowdSale(
         _token,
         _etherHolder,
-        _maxTokenSupply,
+        _maxPreICOTokenSupply,
+        _maxICOTokenSupply,
         _price,
         _startTime,
         _endTime,

@@ -16,7 +16,7 @@ contract PrivateSale is SellableToken {
         address _etherHolder,
         uint256 _startTime,
         uint256 _endTime,
-        uint256 _maxTokenSupply,
+        uint256 _maxTokenSupply, //14000000000000000000000000
         uint256 _etherPriceInUSD
     ) public SellableToken(
         _token,
@@ -107,12 +107,12 @@ contract PrivateSale is SellableToken {
 
     function moveUnsoldTokens() public onlyOwner {
         if (address(ico) != address(0) && now >= endTime && !isActive() && maxTokenSupply > soldTokens) {
-            ico.setMaxTokenSupply(maxTokenSupply.sub(soldTokens));
+            ico.updatePreICOMaxTokenSupply(maxTokenSupply.sub(soldTokens));
             maxTokenSupply = soldTokens;
         }
     }
 
-    function setMaxTokenSupply(uint256) public {
+    function updatePreICOMaxTokenSupply(uint256) public {
         require(false);
     }
 

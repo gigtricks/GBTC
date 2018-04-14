@@ -112,7 +112,7 @@ contract SellableToken is Multivest {
 
     function calculateEthersAmount(uint256 _tokens) public view returns (uint256 ethers, uint256 bonus);
 
-    function setMaxTokenSupply(uint256 _amount) public;
+    function updatePreICOMaxTokenSupply(uint256 _amount) public;
 
     // set ether price in USD with 5 digits after the decimal point
     //ex. 308.75000
