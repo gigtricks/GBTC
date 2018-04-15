@@ -1,13 +1,11 @@
 pragma solidity 0.4.19;
 
-
 import "./GigToken.sol";
 import "./Multivest.sol";
 import "./GigAllocation.sol";
 
 
 contract SellableToken is Multivest {
-
     uint256 public constant MONTH_IN_SEC = 2629743;
     GigToken public token;
     GigAllocation public allocation;

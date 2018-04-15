@@ -3,13 +3,22 @@ pragma solidity 0.4.19;
 
 import "./SellableToken.sol";
 
+/*
+    Tests:
+    - check that contributor tokens are locked at token contract
+    - check that token price calculations are correct
+    - check that ethers calculations are correct
+    - check that contributor cannot exceed max supply for this tier
+    - check that change sale period can be called only by admin
+    - check that change sale period method changes sale period
+    - check that moveUnsoldTokens is can be called only after private sale
+*/
 
 contract PrivateSale is SellableToken {
 
     uint256 public price;
     uint256 public discount;
     SellableToken public ico;
-
 
     function PrivateSale(
         address _token,
@@ -72,7 +81,7 @@ contract PrivateSale is SellableToken {
 
         ethers = _tokens.mul(price).div(etherPriceInUSD);
 
-        if( ethers < getMinEthersInvestment()){
+        if (ethers < getMinEthersInvestment()) {
             return (0, 0);
         }
 
@@ -102,14 +111,15 @@ contract PrivateSale is SellableToken {
 
     function setICO(address _ico) public onlyOwner {
         require(_ico != address(0));
+
         ico = SellableToken(_ico);
     }
 
     function moveUnsoldTokens() public onlyOwner {
-        if (address(ico) != address(0) && now >= endTime && !isActive() && maxTokenSupply > soldTokens) {
-            ico.updatePreICOMaxTokenSupply(maxTokenSupply.sub(soldTokens));
-            maxTokenSupply = soldTokens;
-        }
+        require(address(ico) != address(0) && now >= endTime && !isActive() && maxTokenSupply > soldTokens);
+
+        ico.updatePreICOMaxTokenSupply(maxTokenSupply.sub(soldTokens));
+        maxTokenSupply = soldTokens;
     }
 
     function updatePreICOMaxTokenSupply(uint256) public {
@@ -136,13 +146,16 @@ contract PrivateSale is SellableToken {
 
         collectedEthers = collectedEthers.add(_value);
         etherBalances[_address] = etherBalances[_address].add(_value);
-        allocation.allocateToken(_address, _value, MONTH_IN_SEC, 1 years);
+
+        tokent.increaseLockedBalance(_address, mintedAmount);
+
         transferEthers();
+
         Contribution(_address, _value, tokenAmount);
         return true;
     }
 
     function transferEthers() internal {
-            etherHolder.transfer(this.balance);
+        etherHolder.transfer(this.balance);
     }
 }
