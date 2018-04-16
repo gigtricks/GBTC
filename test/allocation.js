@@ -197,7 +197,49 @@ contract('Allocation', function (accounts) {
     })
 
     it("check that created vesting has correctly inited variables (equal what was send to createVesting)", async function () {
-        //don't know
+        const {token, privateSale, allocation} = await deploy();
+        await  allocation.setICOEndTime(icoTill)
+        await allocation.initVesting({from:accounts[0]})
+            .then(Utils.receiptShouldSucceed);
+        await allocation.allocate(token.address)
+            .then(Utils.receiptShouldSucceed);
+//applicature
+        let vesting = await PeriodicTokenVesting.at(await allocation.vestings.call(0)) //Address of the contract, obtained from Etherscan
+        assert.equal(await vesting.periods.call(), 2, 'periods is not equal');
+        assert.equal(await vesting.beneficiary.call(), "0x760864dcdC58FDA80dB6883ce442B6ce44921Cf9".toLowerCase(), '_beneficiary is not equal');
+        assert.equal( new BigNumber( await vesting.start.call()).valueOf(), icoTill+31536000 , 'start is not equal');
+        assert.equal(await vesting.duration.call(), 31536000, 'duration is not equal');
+        assert.equal(await vesting.revocable.call(), false, 'revocable is not equal');
+        assert.equal(new BigNumber(await token.balanceOf.call(vesting.address)).valueOf(),
+            new BigNumber(1500000).mul(precision).valueOf(), 'balance is not equal');
+
+         vesting = await PeriodicTokenVesting.at(await allocation.vestings.call(1)) //Address of the contract, obtained from Etherscan
+        assert.equal(await vesting.periods.call(), 2, 'periods is not equal');
+        assert.equal(await vesting.beneficiary.call(), "0x7f438d78a51886B24752941ba98Cc00aBA217495".toLowerCase(), '_beneficiary is not equal');
+        assert.equal( new BigNumber( await vesting.start.call()).valueOf(), icoTill+31536000 , 'start is not equal');
+        assert.equal(await vesting.duration.call(), 31536000, 'duration is not equal');
+        assert.equal(await vesting.revocable.call(), true, 'revocable is not equal');
+        assert.equal(new BigNumber(await token.balanceOf.call(vesting.address)).valueOf(),
+            new BigNumber(750000).mul(precision).valueOf(), 'balance is not equal');
+
+         vesting = await PeriodicTokenVesting.at(await allocation.vestings.call(2)) //Address of the contract, obtained from Etherscan
+        assert.equal(await vesting.periods.call(), 2, 'periods is not equal');
+        assert.equal(await vesting.beneficiary.call(), "0xfD86B8B016de558Fe39B1697cBf525592A233B2c".toLowerCase(), '_beneficiary is not equal');
+        assert.equal( new BigNumber( await vesting.start.call()).valueOf(), icoTill+31536000 , 'start is not equal');
+        assert.equal(await vesting.duration.call(), 31536000, 'duration is not equal');
+        assert.equal(await vesting.revocable.call(), true, 'revocable is not equal');
+        assert.equal(new BigNumber(await token.balanceOf.call(vesting.address)).valueOf(),
+            new BigNumber(750000).mul(precision), 'balance is not equal');
+
+         vesting = await PeriodicTokenVesting.at(await allocation.vestings.call(3)) //Address of the contract, obtained from Etherscan
+        assert.equal(await vesting.periods.call(), 2, 'periods is not equal');
+        assert.equal(await vesting.beneficiary.call(), "0x2451A73F35874028217bC833462CCd90c72dbE6D".toLowerCase(), '_beneficiary is not equal');
+        assert.equal(await vesting.start.call(), icoTill+31536000 , 'start is not equal');
+        assert.equal(await vesting.duration.call(), 31536000, 'duration is not equal');
+        assert.equal(await vesting.revocable.call(), true, 'revocable is not equal');
+        assert.equal(new BigNumber(await token.balanceOf.call(vesting.address)).valueOf(),
+            new BigNumber(300000).mul(precision), 'balance is not equal');
+
     })
     it("check that METHODS could be called only by owner", async function () {
         const {token, privateSale, allocation} = await deploy();
@@ -211,7 +253,13 @@ contract('Allocation', function (accounts) {
             .catch(Utils.catchReceiptShouldFailed);
         await  allocation.createVesting(accounts[0], icoTill, 0, 31556926, 3, true)
             .then(Utils.receiptShouldSucceed)
-        // console.log(await allocation.vestings.call(4));
+        console.log(await allocation.vestings.call(0));
+        let vesting = await PeriodicTokenVesting.at(await allocation.vestings.call(0)) //Address of the contract, obtained from Etherscan
+        assert.equal(await vesting.periods.call(), 3, 'periods is not equal');
+        assert.equal(await vesting.beneficiary.call(), accounts[0], '_beneficiary is not equal');
+        assert.equal(await vesting.start.call(), icoTill, 'start is not equal');
+        assert.equal(await vesting.duration.call(), 31556926, 'duration is not equal');
+        assert.equal(await vesting.revocable.call(), true, 'revocable is not equal');
     });
 
 });
