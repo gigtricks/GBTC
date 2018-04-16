@@ -287,6 +287,9 @@ contract('Allocation', function (accounts) {
         await token.transfer(vesting.address, 100)
         assert.equal(new BigNumber(await vesting.vestedAmount(token.address)).valueOf(), 66, 'vestedAmount is not equal')
         await vesting.release(token.address);
+        await vesting.release(token.address)
+    .then(Utils.receiptShouldFailed)
+            .catch(Utils.catchReceiptShouldFailed);
         Utils.balanceShouldEqualTo(token, accounts[4], 66)
         await  allocation.createVesting(accounts[5], parseInt(new Date().getTime() / 1000) - 90000, 0, 30, 2, true)
             .then(Utils.receiptShouldSucceed)
