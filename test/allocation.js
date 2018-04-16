@@ -87,6 +87,7 @@ contract('Allocation', function (accounts) {
     it("check that initVesting could be called only once", async function () {
         const {token, privateSale, allocation} = await deploy();
       await  allocation.setICOEndTime(icoTill)
+          .then(Utils.receiptShouldSucceed);
        await allocation.initVesting({from:accounts[2]})
     .then(Utils.receiptShouldFailed)
             .catch(Utils.catchReceiptShouldFailed);
@@ -139,7 +140,12 @@ contract('Allocation', function (accounts) {
         const {token, privateSale, allocation} = await deploy();
         await  allocation.setICOEndTime(icoTill)
         await allocation.initVesting({from:accounts[0]})
+            .then(Utils.receiptShouldSucceed);
         await allocation.allocate(token.address)
+            .then(Utils.receiptShouldSucceed);
+        await allocation.allocate(token.address)
+            .then(Utils.receiptShouldFailed)
+            .catch(Utils.catchReceiptShouldFailed);
         /*
         // allocate funds to advisors
         token.mint(vestingApplicature, 1500000 * tokenPrecision);
@@ -188,10 +194,23 @@ contract('Allocation', function (accounts) {
             }
         });
     })
-    it("check that after creation & initVesting, allocate - subsequent calls of `allocate` should fail", async function () {
-    })
+
     it("check that created vesting has correctly inited variables (equal what was send to createVesting)", async function () {
+        //don't know
     })
     it("check that METHODS could be called only by owner", async function () {
-    })
+        const {token, privateSale, allocation} = await deploy();
+        await  allocation.setICOEndTime(icoTill, {from: accounts[0]})
+            .then(Utils.receiptShouldSucceed);
+        await  allocation.setICOEndTime(icoTill, {from: accounts[1]})
+            .then(Utils.receiptShouldFailed)
+            .catch(Utils.catchReceiptShouldFailed);
+        await  allocation.createVesting(accounts[0], icoTill, 0, 31556926, 3, true, {from: accounts[1]})
+            .then(Utils.receiptShouldFailed)
+            .catch(Utils.catchReceiptShouldFailed);
+       let vesting = await  allocation.createVesting(accounts[0], icoTill, 0, 31556926, 3, true)
+            .then(Utils.receiptShouldSucceed)
+        console.log(await allocation.vestings);
+    });
+
 });

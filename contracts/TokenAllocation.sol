@@ -36,8 +36,8 @@ contract TokenAllocation is Ownable {
     address public vestingNathanChristian;
     address public vestingEdwinVanBerg;
 
-    mapping (address => bool) tokenInited;
-    mapping (address => bool) vestings;
+    mapping (address => bool) public tokenInited;
+    mapping (address => bool) public vestings;
 
     event VestingCreated(
         address _vesting,
