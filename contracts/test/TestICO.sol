@@ -1,7 +1,7 @@
 pragma solidity ^0.4.18;
 
 
-import "../CrowdSale.sol";
+import '../CrowdSale.sol';
 
 
 contract TestICO is CrowdSale {

@@ -1,7 +1,7 @@
 pragma solidity 0.4.19;
 
-import "./GigToken.sol";
-import "./Multivest.sol";
+import './GigToken.sol';
+import './Multivest.sol';
 
 
 contract SellableToken is Multivest {

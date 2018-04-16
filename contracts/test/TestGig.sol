@@ -1,6 +1,6 @@
 pragma solidity ^0.4.18;
 
-import "../GigToken.sol";
+import '../GigToken.sol';
 
 contract TestGig is GigToken {
     function TestGig(

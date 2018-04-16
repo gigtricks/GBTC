@@ -1,7 +1,7 @@
 pragma solidity 0.4.19;
 
 
-import "./SellableToken.sol";
+import './SellableToken.sol';
 
 /*
     Tests:

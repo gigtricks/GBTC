@@ -1,8 +1,8 @@
 pragma solidity 0.4.19;
 
-import "./PeriodicTokenVesting.sol";
-import "./MintingERC20.sol";
-import "zeppelin-solidity/contracts/math/SafeMath.sol";
+import './PeriodicTokenVesting.sol';
+import './MintingERC20.sol';
+import 'zeppelin-solidity/contracts/math/SafeMath.sol';
 /*
     Tests:
     - check that initVesting could be called only once

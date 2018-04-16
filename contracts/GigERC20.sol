@@ -1,8 +1,8 @@
 pragma solidity 0.4.19;
 
 
-import "zeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
-import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+import 'zeppelin-solidity/contracts/token/ERC20/StandardToken.sol';
+import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 
 
 contract GigERC20 is StandardToken, Ownable {
@@ -28,7 +28,7 @@ contract GigERC20 is StandardToken, Ownable {
         bool _transferAllSupplyToOwner,
         bool _locked
     ) public {
-        standard = "ERC20 0.1";
+        standard = 'ERC20 0.1';
         locked = _locked;
         totalSupply_ = _totalSupply;
 

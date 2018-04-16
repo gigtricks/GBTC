@@ -1,8 +1,8 @@
 pragma solidity 0.4.19;
 
 
-import "./GigERC20.sol";
-import "zeppelin-solidity/contracts/math/SafeMath.sol";
+import './GigERC20.sol';
+import 'zeppelin-solidity/contracts/math/SafeMath.sol';
 
 
 /*
@@ -35,7 +35,7 @@ contract MintingERC20 is GigERC20 {
     )
         public GigERC20(_initialSupply, _tokenName, _decimals, _symbol, _transferAllSupplyToOwner, _locked)
     {
-        standard = "MintingERC20 0.1";
+        standard = 'MintingERC20 0.1';
         minters[msg.sender] = true;
         maxSupply = _maxSupply;
     }

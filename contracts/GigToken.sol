@@ -1,7 +1,7 @@
 pragma solidity 0.4.19;
 
-import "./MintingERC20.sol";
-import "./SellableToken.sol";
+import './MintingERC20.sol';
+import './SellableToken.sol';
 
 
 /*
@@ -45,9 +45,9 @@ contract GigToken is MintingERC20 {
     event MaxSupplyBurned(uint256 burnedTokens);
 
     function GigToken(bool _locked) public
-        MintingERC20(0, maxSupply, "GigBit", 18, "GBTC", false, _locked)
+        MintingERC20(0, maxSupply, 'GigBit', 18, 'GBTC', false, _locked)
     {
-        standard = "GBTC 0.1";
+        standard = 'GBTC 0.1';
 
         maxSupply = uint256(1000000000).mul(uint256(10) ** decimals);
     }
