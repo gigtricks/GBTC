@@ -869,7 +869,7 @@ contract('PrivateSale', function (accounts) {
         token.transfer(accounts[1], new BigNumber('1008064516129032258064').valueOf())
             .then(Utils.receiptShouldSucceed);
         token.transfer(accounts[1], new BigNumber('1008064516129032258065').valueOf())
-            .then(Utils.receiptShouldSucceed);
+            .then(Utils.receiptShouldSucceed)
         await Utils.checkState({token}, {
             token: {
                 privateSale: privateSale.address,
