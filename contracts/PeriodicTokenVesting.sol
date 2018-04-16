@@ -31,7 +31,7 @@ contract PeriodicTokenVesting is TokenVesting {
 
             uint256 periodTokens = totalBalance.div(periods);
 
-            uint256 periodsOver = now.sub(start).div(duration);
+            uint256 periodsOver = now.sub(start).div(duration) + 1;
 
             if (periodsOver > periods) {
                 return totalBalance;
