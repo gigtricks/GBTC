@@ -17,6 +17,7 @@ import "zeppelin-solidity/contracts/math/SafeMath.sol";
         - revokeVesting
 */
 
+
 contract TokenAllocation is Ownable {
     using SafeERC20 for ERC20Basic;
     using SafeMath for uint256;

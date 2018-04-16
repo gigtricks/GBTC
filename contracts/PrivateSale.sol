@@ -125,7 +125,7 @@ contract PrivateSale is SellableToken {
         require(false);
     }
 
-    function isTransferAllowed(address, uint256) public view returns (bool){
+    function isTransferAllowed(address, uint256) public view returns (bool) {
         return false;
     }
 
