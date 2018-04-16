@@ -29,7 +29,7 @@ contract TokenAllocation is Ownable {
     address public sadiqHameed = 0x27B5cb71ff083Bd6a34764fBf82700b3669137f3;
     address public omairLatif = 0x92Db818bF10Bf3BfB73942bbB1f184274aA63833;
 
-    uint256 public icoEndTime; // @TODO: set it
+    uint256 public icoEndTime;
 
     address public vestingApplicature;
     address public vestingSimonCocking;
@@ -50,6 +50,10 @@ contract TokenAllocation is Ownable {
     );
 
     event VestingRevoked(address _vesting);
+
+    function setICOEndTime(uint256 _icoEndTime) public onlyOwner{
+        icoEndTime = _icoEndTime;
+    }
 
     function initVesting() public onlyOwner() {
         require(vestingApplicature == address(0) &&

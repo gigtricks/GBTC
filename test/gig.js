@@ -49,7 +49,7 @@ async function deploy() {
     return {token, privateSale};
 }
 
-contract('Token', function (accounts) {
+contract('PrivateSale', function (accounts) {
 
     it("deploy & check constructor info & check: setPrivateSale, SetLocked with transfers", async function () {
         const {token, privateSale} = await deploy();
