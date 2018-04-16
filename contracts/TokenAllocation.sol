@@ -36,8 +36,8 @@ contract TokenAllocation is Ownable {
     address public vestingNathanChristian;
     address public vestingEdwinVanBerg;
 
-    mapping (address => bool) public tokenInited;
-    mapping (address => bool) public vestings;
+    mapping(address => bool) public tokenInited;
+    address[] public vestings;
 
     event VestingCreated(
         address _vesting,
@@ -51,7 +51,7 @@ contract TokenAllocation is Ownable {
 
     event VestingRevoked(address _vesting);
 
-    function setICOEndTime(uint256 _icoEndTime) public onlyOwner{
+    function setICOEndTime(uint256 _icoEndTime) public onlyOwner {
         icoEndTime = _icoEndTime;
     }
 
@@ -65,7 +65,9 @@ contract TokenAllocation is Ownable {
 
         uint256 oneYearAfterIcoEnd = icoEndTime.add(1 years);
 
-//        vestingApplicature = createVesting(address(0), oneYearAfterIcoEnd, 0, 1 years, 2, false);
+        vestingApplicature = createVesting(
+            0x760864dcdC58FDA80dB6883ce442B6ce44921Cf9, oneYearAfterIcoEnd, 0, 1 years, 2, false
+        );
 
         vestingSimonCocking = createVesting(
             0x7f438d78a51886B24752941ba98Cc00aBA217495, oneYearAfterIcoEnd, 0, 1 years, 2, true
@@ -85,7 +87,7 @@ contract TokenAllocation is Ownable {
 
         tokenInited[token] = true;
 
-//        require(vestingApplicature != address(0));
+        require(vestingApplicature != address(0));
         require(vestingSimonCocking != address(0));
         require(vestingNathanChristian != address(0));
         require(vestingEdwinVanBerg != address(0));
@@ -95,7 +97,7 @@ contract TokenAllocation is Ownable {
         // allocate funds
         token.mint(ecosystemIncentive, 200000000 * tokenPrecision);
         token.mint(marketingAndBounty, 50000000 * tokenPrecision);
-        token.mint(liquidityFund, 50000000	* tokenPrecision);
+        token.mint(liquidityFund, 50000000 * tokenPrecision);
         token.mint(treasure, 200000000 * tokenPrecision);
 
         // allocate funds to founders
@@ -104,7 +106,7 @@ contract TokenAllocation is Ownable {
         token.mint(omairLatif, 36675000 * tokenPrecision);
 
         // allocate funds to advisors
-//        token.mint(vestingApplicature, 1500000 * tokenPrecision);
+        token.mint(vestingApplicature, 1500000 * tokenPrecision);
         token.mint(vestingSimonCocking, 750000 * tokenPrecision);
         token.mint(vestingNathanChristian, 750000 * tokenPrecision);
         token.mint(vestingEdwinVanBerg, 300000 * tokenPrecision);
@@ -117,7 +119,7 @@ contract TokenAllocation is Ownable {
             _beneficiary, _start, _cliff, _duration, _periods, _revocable
         );
 
-        vestings[vesting] = true;
+        vestings.push(vesting);
 
         VestingCreated(vesting, _beneficiary, _start, _cliff, _duration, _periods, _revocable);
 

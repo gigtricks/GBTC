@@ -2,6 +2,7 @@ var
     PrivateSale = artifacts.require("./PrivateSale.sol"),
     TestGig = artifacts.require("./test/TestGig.sol"),
     TokenAllocation = artifacts.require("./TokenAllocation.sol"),
+    PeriodicTokenVesting = artifacts.require("./PeriodicTokenVesting.sol"),
 
     Utils = require("./utils"),
     BigNumber = require('bignumber.js'),
@@ -208,9 +209,9 @@ contract('Allocation', function (accounts) {
         await  allocation.createVesting(accounts[0], icoTill, 0, 31556926, 3, true, {from: accounts[1]})
             .then(Utils.receiptShouldFailed)
             .catch(Utils.catchReceiptShouldFailed);
-       let vesting = await  allocation.createVesting(accounts[0], icoTill, 0, 31556926, 3, true)
+        await  allocation.createVesting(accounts[0], icoTill, 0, 31556926, 3, true)
             .then(Utils.receiptShouldSucceed)
-        console.log(await allocation.vestings);
+        // console.log(await allocation.vestings.call(4));
     });
 
 });
