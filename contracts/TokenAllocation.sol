@@ -57,13 +57,15 @@ contract TokenAllocation is Ownable {
 
     function initVesting() public onlyOwner() {
         require(vestingApplicature == address(0) &&
-                vestingSimonCocking == address(0) &&
-                vestingNathanChristian == address(0) &&
-                vestingEdwinVanBerg == address(0));
+        vestingSimonCocking == address(0) &&
+        vestingNathanChristian == address(0) &&
+        vestingEdwinVanBerg == address(0) &&
+        icoEndTime != 0
+        );
 
         uint256 oneYearAfterIcoEnd = icoEndTime.add(1 years);
 
-        vestingApplicature = createVesting(address(0), oneYearAfterIcoEnd, 0, 1 years, 2, false);
+//        vestingApplicature = createVesting(address(0), oneYearAfterIcoEnd, 0, 1 years, 2, false);
 
         vestingSimonCocking = createVesting(
             0x7f438d78a51886B24752941ba98Cc00aBA217495, oneYearAfterIcoEnd, 0, 1 years, 2, true

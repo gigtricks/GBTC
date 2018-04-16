@@ -29,6 +29,7 @@ async function deploy() {
     await token.setPrivateSale(privateSale.address);
     await privateSale.setAllowedMultivest(signAddress);
     const allocation = await TokenAllocation.new();
+    await token.addMinter(allocation.address);
 
     return {token, privateSale, allocation};
 }
@@ -85,13 +86,14 @@ contract('Allocation', function (accounts) {
     })
     it("check that initVesting could be called only once", async function () {
         const {token, privateSale, allocation} = await deploy();
-        allocation.initVesting({from:accounts[2]})
-    .then(Utils.receiptShouldFailed)
-            .catch(Utils.catchReceiptShouldFailed);
-        allocation.initVesting({from:accounts[0]})
-        allocation.initVesting({from:accounts[0]})
-            .then(Utils.receiptShouldFailed)
-            .catch(Utils.catchReceiptShouldFailed);
+      await  allocation.setICOEndTime(icoTill)
+    //    await allocation.initVesting({from:accounts[2]})
+    // .then(Utils.receiptShouldFailed)
+    //         .catch(Utils.catchReceiptShouldFailed);
+        await allocation.initVesting({from:accounts[0]})
+        // allocation.initVesting({from:accounts[0]})
+        //     .then(Utils.receiptShouldFailed)
+        //     .catch(Utils.catchReceiptShouldFailed);
         await Utils.checkState({token, privateSale, allocation}, {
             token: {
                 privateSale: privateSale.address,
@@ -129,14 +131,32 @@ contract('Allocation', function (accounts) {
                 amirShaikh: "0x31b17e7a2F86d878429C03f3916d17555C0d4884".toLowerCase(),
                 sadiqHameed: "0x27B5cb71ff083Bd6a34764fBf82700b3669137f3".toLowerCase(),
                 omairLatif: "0x92Db818bF10Bf3BfB73942bbB1f184274aA63833".toLowerCase(),
-                icoEndTime: 0
+                icoEndTime: icoTill
             }
         });
     })
     it("check that after creation & initVesting, allocate - all balances are filled (owners, funds, team)", async function () {
         const {token, privateSale, allocation} = await deploy();
-        allocation.initVesting({from:accounts[0]})
-        allocation.allocate(token.address)
+        // await allocation.initVesting({from:accounts[0]})
+        // await allocation.allocate(token.address)
+        /*
+          // allocate funds
+        token.mint(ecosystemIncentive, 200000000 * tokenPrecision);
+        token.mint(marketingAndBounty, 50000000 * tokenPrecision);
+        token.mint(liquidityFund, 50000000	* tokenPrecision);
+        token.mint(treasure, 200000000 * tokenPrecision);
+
+        // allocate funds to founders
+        token.mint(amirShaikh, 73350000 * tokenPrecision);
+        token.mint(sadiqHameed, 36675000 * tokenPrecision);
+        token.mint(amirShaikh, 36675000 * tokenPrecision);
+
+        // allocate funds to advisors
+        token.mint(vestingApplicature, 1500000 * tokenPrecision);
+        token.mint(vestingSimonCocking, 750000 * tokenPrecision);
+        token.mint(vestingNathanChristian, 750000 * tokenPrecision);
+        token.mint(vestingEdwinVanBerg, 300000 * tokenPrecision);
+         */
     })
     it("check that after creation & initVesting, allocate - subsequent calls of `allocate` should fail", async function () {
     })
