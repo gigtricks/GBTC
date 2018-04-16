@@ -366,14 +366,12 @@ contract CrowdSale is SellableToken {
         (tokenAmount, usdAmount) = calculateTokensAmount(_value);
 
         if (activeTier >= PRE_ICO_TIER_FIRST && activeTier <= PRE_ICO_TIER_LAST) {
-            if (address(allocation) == address(0)) {
-                return false;
-            }
             mintedAmount = mintPreICO(_address, tokenAmount, _value, usdAmount);
 
             require(usdAmount > 0 && mintedAmount > 0);
             if (activeTier <= LOCK_BALANCES_TO) {
-                allocation.allocateToken(_address, mintedAmount, MONTH_IN_SEC, 1 years);
+                //@todo
+//                allocation.allocateToken(_address, mintedAmount, MONTH_IN_SEC, 1 years);
             }
             etherHolder.transfer(this.balance);
         } else {

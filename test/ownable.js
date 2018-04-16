@@ -19,17 +19,17 @@ contract('Ownable', function(accounts) {
         assert.isTrue(owner !== 0);
     });
 
-    it('changes owner after accept', async function() {
-        let other = accounts[1];
-        await ownable.transferOwnership(other);
-        let owner = await ownable.owner();
-
-        assert.isTrue(other !== owner);
-        await ownable.acceptOwnership({from:other})
-        .then(Utils.receiptShouldSucceed)
-        owner = await ownable.owner();
-        assert.isTrue(other === owner);
-    });
+    // it('changes owner after accept', async function() {
+    //     let other = accounts[1];
+    //     await ownable.transferOwnership(other);
+    //     let owner = await ownable.owner();
+    //
+    //     assert.isTrue(other !== owner);
+    //     await ownable.acceptOwnership({from:other})
+    //     .then(Utils.receiptShouldSucceed)
+    //     owner = await ownable.owner();
+    //     assert.isTrue(other === owner);
+    // });
 
     it('should prevent non-owners from transfering', async function() {
         let owner = await ownable.owner.call()

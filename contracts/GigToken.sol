@@ -30,14 +30,14 @@ contract GigToken is MintingERC20 {
     mapping(address => uint256) public lockedBalancesReleasedAfterOneYear;
 
     modifier onlyCrowdSale() {
-        require(crowdSale != address(0) && msg.sender == crowdSale);
+        require(crowdSale != address(0) && msg.sender == address(crowdSale));
 
         _;
     }
 
     modifier onlySales() {
-        require((privateSale != address(0) && msg.sender == privateSale) ||
-            (crowdSale != address(0) && msg.sender == crowdSale));
+        require((privateSale != address(0) && msg.sender == address(privateSale)) ||
+            (crowdSale != address(0) && msg.sender == address(crowdSale)));
 
         _;
     }
@@ -52,7 +52,7 @@ contract GigToken is MintingERC20 {
         maxSupply = uint256(1000000000).mul(uint256(10) ** decimals);
     }
 
-    function setICO(address _crowdSale) public onlyOwner {
+    function setCrowdSale(address _crowdSale) public onlyOwner {
         require(_crowdSale != address(0));
 
         crowdSale = SellableToken(_crowdSale);
@@ -71,20 +71,22 @@ contract GigToken is MintingERC20 {
     }
 
     function isTransferAllowed(address _from, uint256 _value) public view returns (bool status) {
-        if (transferFrozen == true) {
+        uint256 senderBalance = balanceOf(_from);
+        if (transferFrozen == true || senderBalance < _value) {
             return false;
         }
 
-        uint256 senderBalance = balanceOf(_from);
         uint256 lockedBalance = lockedBalancesReleasedAfterOneYear[_from];
 
-
         // check if holder tries to transfer more than locked tokens
-        if (lockedBalance > 0) {
-            uint256 unlockTime = icoEndTime + 1 years;
+        //        value = 1000000000000000000
+        //        lockedBalance = 24193548387096774193548
+        //        senderBalance = 24194548387096774193548
+    if (lockedBalance > 0 && senderBalance.sub(_value) < lockedBalance) {
+            uint256 unlockTime = crowdSaleEndTime + 1 years;
 
             // fail if unlock time is not come
-            if (block.timestamp < unlockTime) {
+            if (crowdSaleEndTime == 0 || block.timestamp < unlockTime) {
                 return false;
             }
 
@@ -99,7 +101,7 @@ contract GigToken is MintingERC20 {
 
             uint256 tokensPerMonth = lockedBalance / 12;
 
-            uint256 unlockedBalance = tokensPerPeriod.mul(months); // 600k unlocked tokens
+            uint256 unlockedBalance = tokensPerMonth.mul(months); // 600k unlocked tokens
 
             uint256 actualLockedBalance = lockedBalance.sub(unlockedBalance);
 
@@ -115,6 +117,7 @@ contract GigToken is MintingERC20 {
         ) {
             return false;
         }
+
 
         return true;
     }
@@ -156,7 +159,7 @@ contract GigToken is MintingERC20 {
         return super.decreaseApproval(_spender, _subtractedValue);
     }
 
-    function increaseLockedBalance(address _address, uint256 _tokens) onlySales {
+    function increaseLockedBalance(address _address, uint256 _tokens) public onlySales {
         lockedBalancesReleasedAfterOneYear[_address] =
             lockedBalancesReleasedAfterOneYear[_address].add(_tokens);
     }

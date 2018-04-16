@@ -40,7 +40,8 @@ async function deploy() {
         24800,
         icoSince, //_startTime
         icoTill,//_endTime
-        150000000
+        150000000,
+        icoTill+ 3600
     );
     const allocations = 0x0;
     // const allocations = await SupplyBlocAllocation.new(token.address, ico.address);

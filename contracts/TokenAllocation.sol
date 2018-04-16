@@ -1,8 +1,8 @@
 pragma solidity 0.4.19;
 
 import "./PeriodicTokenVesting.sol";
-import "./Ownable.sol";
-
+import "./MintingERC20.sol";
+import "zeppelin-solidity/contracts/math/SafeMath.sol";
 /*
     Tests:
     - check that initVesting could be called only once
@@ -19,6 +19,7 @@ import "./Ownable.sol";
 
 contract TokenAllocation is Ownable {
     using SafeERC20 for ERC20Basic;
+    using SafeMath for uint256;
 
     address public ecosystemIncentive = 0xd339D9aeDFFa244E09874D65290c09d64b2356E0;
     address public marketingAndBounty = 0x26d6EF95A51BF0A2048Def4Fb7c548c3BDE37410;
@@ -83,7 +84,7 @@ contract TokenAllocation is Ownable {
         require(vestingNathanChristian != address(0));
         require(vestingEdwinVanBerg != address(0));
 
-        uint256 tokenPrecision = 10 ** token.decimals();
+        uint256 tokenPrecision = uint256(10) ** uint256(token.decimals());
 
         // allocate funds
         token.mint(ecosystemIncentive, 200000000 * tokenPrecision);
@@ -117,8 +118,8 @@ contract TokenAllocation is Ownable {
         return vesting;
     }
 
-    function revokeVesting(PeriodicTokenVesting _vesting) public onlyOwner() {
-        _vesting.revoke();
+    function revokeVesting(PeriodicTokenVesting _vesting, MintingERC20 token) public onlyOwner() {
+        _vesting.revoke(token);
 
         VestingRevoked(_vesting);
     }

@@ -4,13 +4,13 @@ import "../GigToken.sol";
 
 contract TestGig is GigToken {
     function TestGig(
-        bool _locked,
-        uint256 _icoEndTime
-    ) public GigToken(_locked, _icoEndTime)
+        bool _locked
+    ) public GigToken(_locked)
     { }
 
     function testSetFreezing(bool _isFrozen) public {
         transferFrozen = _isFrozen;
     }
+
 
 }

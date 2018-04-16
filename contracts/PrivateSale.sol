@@ -18,7 +18,7 @@ contract PrivateSale is SellableToken {
 
     uint256 public price;
     uint256 public discount;
-    SellableToken public ico;
+    SellableToken public crowdSale;
 
     function PrivateSale(
         address _token,
@@ -74,20 +74,19 @@ contract PrivateSale is SellableToken {
         }
     }
 
-    function calculateEthersAmount(uint256 _tokens) public view returns (uint256 ethers, uint256 bonus) {
+    function calculateEthersAmount(uint256 _tokens) public view returns (uint256 ethers, uint256 usdAmount) {
         if (_tokens == 0) {
             return (0, 0);
         }
 
-        ethers = _tokens.mul(price).div(etherPriceInUSD);
+        usdAmount = _tokens.mul((price * (100 - discount) / 100));
+        ethers = usdAmount.div(etherPriceInUSD);
 
         if (ethers < getMinEthersInvestment()) {
             return (0, 0);
         }
 
-        uint256 usdAmount = ethers.mul(etherPriceInUSD);
-
-        bonus = usdAmount.div(price * (100 - discount) / 100) - _tokens;
+        usdAmount = usdAmount.div(uint256(10) ** 18);
     }
 
     function getStats(uint256 _ethPerBtc) public view returns (
@@ -109,16 +108,16 @@ contract PrivateSale is SellableToken {
         (tokensPerBtc, usd) = calculateTokensAmount(_ethPerBtc);
     }
 
-    function setICO(address _ico) public onlyOwner {
-        require(_ico != address(0));
+    function setCrowdSale(address _crowdSale) public onlyOwner {
+        require(_crowdSale != address(0));
 
-        ico = SellableToken(_ico);
+        crowdSale = SellableToken(_crowdSale);
     }
 
     function moveUnsoldTokens() public onlyOwner {
-        require(address(ico) != address(0) && now >= endTime && !isActive() && maxTokenSupply > soldTokens);
+        require(address(crowdSale) != address(0) && now >= endTime && !isActive() && maxTokenSupply > soldTokens);
 
-        ico.updatePreICOMaxTokenSupply(maxTokenSupply.sub(soldTokens));
+        crowdSale.updatePreICOMaxTokenSupply(maxTokenSupply.sub(soldTokens));
         maxTokenSupply = soldTokens;
     }
 
@@ -131,7 +130,7 @@ contract PrivateSale is SellableToken {
     }
 
     function buy(address _address, uint256 _value) internal returns (bool) {
-        if (_value == 0 || _address == address(0) || address(allocation) == address(0)) {
+        if (_value == 0 || _address == address(0)) {
             return false;
         }
 
@@ -147,7 +146,7 @@ contract PrivateSale is SellableToken {
         collectedEthers = collectedEthers.add(_value);
         etherBalances[_address] = etherBalances[_address].add(_value);
 
-        tokent.increaseLockedBalance(_address, mintedAmount);
+        token.increaseLockedBalance(_address, mintedAmount);
 
         transferEthers();
 
