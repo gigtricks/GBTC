@@ -35,6 +35,7 @@ async function deploy() {
     return {token, privateSale, allocation};
 }
 contract('Allocation', function (accounts) {
+
     it("deploy & check constructor info", async function () {
         const {token, privateSale, allocation} = await deploy();
         console.log(allocation.address);
@@ -147,13 +148,7 @@ contract('Allocation', function (accounts) {
         await allocation.allocate(token.address)
             .then(Utils.receiptShouldFailed)
             .catch(Utils.catchReceiptShouldFailed);
-        /*
-        // allocate funds to advisors
-        token.mint(vestingApplicature, 1500000 * tokenPrecision);
-        token.mint(vestingSimonCocking, 750000 * tokenPrecision);
-        token.mint(vestingNathanChristian, 750000 * tokenPrecision);
-        token.mint(vestingEdwinVanBerg, 300000 * tokenPrecision);
-         */
+
         await Utils.checkState({token, privateSale, allocation}, {
             token: {
                 privateSale: privateSale.address,
@@ -241,6 +236,7 @@ contract('Allocation', function (accounts) {
             new BigNumber(300000).mul(precision), 'balance is not equal');
 
     })
+
     it("check that METHODS could be called only by owner", async function () {
         const {token, privateSale, allocation} = await deploy();
         await  allocation.setICOEndTime(icoTill, {from: accounts[0]})
@@ -260,6 +256,47 @@ contract('Allocation', function (accounts) {
         assert.equal(await vesting.start.call(), icoTill, 'start is not equal');
         assert.equal(await vesting.duration.call(), 31556926, 'duration is not equal');
         assert.equal(await vesting.revocable.call(), true, 'revocable is not equal');
+        await token.mint(accounts[0], 2000, {from: accounts[0]})
+        await token.transfer(vesting.address, 1000)
+        assert.equal(new BigNumber(await vesting.vestedAmount(token.address)), 0, 'vestedAmount is not equal')
+
+        await  allocation.createVesting(accounts[2], parseInt(new Date().getTime() / 1000) - 61, 0, 60, 2, true)
+            .then(Utils.receiptShouldSucceed)
+
+         vesting = await PeriodicTokenVesting.at(await allocation.vestings.call(1)) //Address of the contract, obtained from Etherscan
+        await token.mint(accounts[0], 2000, {from: accounts[0]})
+        await token.transfer(vesting.address, 100)
+        assert.equal(new BigNumber(await vesting.vestedAmount(token.address)).valueOf(), 50, 'vestedAmount is not equal')
+        await vesting.release(token.address);
+        await  allocation.createVesting(accounts[3], parseInt(new Date().getTime() / 1000) - 61, 0, 30, 2, true)
+            .then(Utils.receiptShouldSucceed)
+        await token.transfer(vesting.address, 100)
+        vesting = await PeriodicTokenVesting.at(await allocation.vestings.call(2)) //Address of the contract, obtained from Etherscan
+        await token.mint(accounts[0], 2000, {from: accounts[0]})
+        await token.transfer(vesting.address, 100)
+        assert.equal(new BigNumber(await vesting.vestedAmount(token.address)).valueOf(), 100, 'vestedAmount is not equal')
+        await vesting.release(token.address);
+        Utils.balanceShouldEqualTo(token, accounts[2], 50)
+        Utils.balanceShouldEqualTo(token, accounts[3], 100)
+
+        await  allocation.createVesting(accounts[4], parseInt(new Date().getTime() / 1000) - 61, 0, 30, 3, true)
+            .then(Utils.receiptShouldSucceed)
+        await token.transfer(vesting.address, 100)
+        vesting = await PeriodicTokenVesting.at(await allocation.vestings.call(3)) //Address of the contract, obtained from Etherscan
+        await token.mint(accounts[0], 2000, {from: accounts[0]})
+        await token.transfer(vesting.address, 100)
+        assert.equal(new BigNumber(await vesting.vestedAmount(token.address)).valueOf(), 66, 'vestedAmount is not equal')
+        await vesting.release(token.address);
+        Utils.balanceShouldEqualTo(token, accounts[4], 66)
+        await  allocation.createVesting(accounts[5], parseInt(new Date().getTime() / 1000) - 90000, 0, 30, 2, true)
+            .then(Utils.receiptShouldSucceed)
+        vesting = await PeriodicTokenVesting.at(await allocation.vestings.call(4)) //Address of the contract, obtained from Etherscan
+        await token.mint(accounts[0], 2000, {from: accounts[0]})
+        await token.transfer(vesting.address, 100)
+        assert.equal(new BigNumber(await vesting.vestedAmount(token.address)).valueOf(), 100, 'vestedAmount is not equal')
+        await vesting.release(token.address);
+        Utils.balanceShouldEqualTo(token, accounts[5], 100)
+
     });
 
 });

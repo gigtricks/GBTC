@@ -28,10 +28,10 @@ contract PeriodicTokenVesting is TokenVesting {
         } else if (now >= start.add(duration * periods) || revoked[token]) {
             return totalBalance;
         } else {
-            // 1500000 / 2 = 750 000
+
             uint256 periodTokens = totalBalance.div(periods);
 
-            uint256 periodsOver = now.sub(start).div(duration) + 1;
+            uint256 periodsOver = now.sub(start).div(duration);
 
             if (periodsOver > periods) {
                 return totalBalance;

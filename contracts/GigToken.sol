@@ -79,9 +79,6 @@ contract GigToken is MintingERC20 {
         uint256 lockedBalance = lockedBalancesReleasedAfterOneYear[_from];
 
         // check if holder tries to transfer more than locked tokens
-        //        value = 1000000000000000000
-        //        lockedBalance = 24193548387096774193548
-        //        senderBalance = 24194548387096774193548
     if (lockedBalance > 0 && senderBalance.sub(_value) < lockedBalance) {
             uint256 unlockTime = crowdSaleEndTime + 1 years;
 
@@ -93,7 +90,7 @@ contract GigToken is MintingERC20 {
             uint256 secsFromUnlock = block.timestamp.sub(unlockTime);
 
             // number of months over from unlock
-            uint256 months = secsFromUnlock / 30;
+            uint256 months = secsFromUnlock / 30 days;
 
             if (months > 12) {
                 months = 12;
@@ -101,7 +98,7 @@ contract GigToken is MintingERC20 {
 
             uint256 tokensPerMonth = lockedBalance / 12;
 
-            uint256 unlockedBalance = tokensPerMonth.mul(months); // 600k unlocked tokens
+            uint256 unlockedBalance = tokensPerMonth.mul(months);
 
             uint256 actualLockedBalance = lockedBalance.sub(unlockedBalance);
 
@@ -110,7 +107,6 @@ contract GigToken is MintingERC20 {
             }
         }
 
-        // Prevent transfering of tokens before Soft CAP reached (need to double check with Amir)
         if (block.timestamp < crowdSaleEndTime &&
             crowdSale != address(0) &&
             crowdSale.isTransferAllowed(_from, _value) == false
