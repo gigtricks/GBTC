@@ -85,7 +85,7 @@ contract TokenAllocation is Ownable {
 
         tokenInited[token] = true;
 
-        require(vestingApplicature != address(0));
+//        require(vestingApplicature != address(0));
         require(vestingSimonCocking != address(0));
         require(vestingNathanChristian != address(0));
         require(vestingEdwinVanBerg != address(0));
@@ -101,10 +101,10 @@ contract TokenAllocation is Ownable {
         // allocate funds to founders
         token.mint(amirShaikh, 73350000 * tokenPrecision);
         token.mint(sadiqHameed, 36675000 * tokenPrecision);
-        token.mint(amirShaikh, 36675000 * tokenPrecision);
+        token.mint(omairLatif, 36675000 * tokenPrecision);
 
         // allocate funds to advisors
-        token.mint(vestingApplicature, 1500000 * tokenPrecision);
+//        token.mint(vestingApplicature, 1500000 * tokenPrecision);
         token.mint(vestingSimonCocking, 750000 * tokenPrecision);
         token.mint(vestingNathanChristian, 750000 * tokenPrecision);
         token.mint(vestingEdwinVanBerg, 300000 * tokenPrecision);
