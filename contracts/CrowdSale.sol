@@ -274,7 +274,7 @@ contract CrowdSale is SellableToken {
 
     function isTransferAllowed(address _from, uint256 _value) public view returns (bool status){
         if (collectedUSD.add(preICOStats.collectedUSD) < softCap) {
-            if (token.balanceOf(_from) >= icoBalances[_from] && token.balanceOf(_from) - icoBalances[_from] > _value) {
+            if (token.balanceOf(_from) >= icoBalances[_from] && token.balanceOf(_from).sub(icoBalances[_from])> _value) {
                 return true;
             }
             return false;

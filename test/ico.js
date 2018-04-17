@@ -678,10 +678,113 @@ contract('ICO', function (accounts) {
     it("check collected USD", async function () {
         const {token, ico, allocations} = await deploy();
         await token.setCrowdSale(ico.address);
-        await ico.testChangeCollectedUSD(new BigNumber('5000000').mul(usdPrecision))
-        assert.equal(new BigNumber(await ico.collectedUSD.call()).valueOf(), new BigNumber('5000000').mul(usdPrecision).valueOf(), "collectedUSD is not equal");
-        assert.equal(await ico.isRefundPossible.call(), false, "RefundPossible is not equal");
+
+        let etherHolderBalance = await Utils.getEtherBalance(etherHolder)
+
+        let start = parseInt(new Date().getTime() / 1000 - 3600 * 2);
+        await ico.changeICODates(0, start, parseInt(new Date().getTime() / 1000 - 3600));
+        await ico.changeICODates(1, parseInt(new Date().getTime() / 1000 - 3600 * 2), parseInt(new Date().getTime() / 1000 - 3600));
+        await ico.changeICODates(2, parseInt(new Date().getTime() / 1000 - 3600 * 2), parseInt(new Date().getTime() / 1000 - 3600));
+        await ico.changeICODates(3, parseInt(new Date().getTime() / 1000 - 3600 * 2), parseInt(new Date().getTime() / 1000 - 3600));
+        await ico.changeICODates(4, parseInt(new Date().getTime() / 1000) - 3600, parseInt(new Date().getTime() / 1000) - 3600 + 3600 * 24);
+        //((10 ^ 18) * (1500 * 10 ^ 5) / (0.2480 * 10 ^ 5*(100-50)/100))
+
         await makeTransactionKYC(ico, signAddress, accounts[3], new BigNumber('1').mul(precision).valueOf())
             .then(Utils.receiptShouldSucceed);
+        await Utils.checkEtherBalance(etherHolder, new BigNumber("1").mul(precision).add(etherHolderBalance).valueOf())
+        await ico.changeICODates(4, parseInt(new Date().getTime() / 1000 - 3600 * 2), parseInt(new Date().getTime() / 1000 - 3600));
+        await ico.changeICODates(5, parseInt(new Date().getTime() / 1000 - 3600 * 2), parseInt(new Date().getTime() / 1000 - 3600));
+        await ico.changeICODates(6, parseInt(new Date().getTime() / 1000) - 3600, parseInt(new Date().getTime() / 1000) - 3600 + 3600 * 24);
+        assert.equal(await ico.isRefundPossible.call(), false, "RefundPossible is not equal");
+        //((10 ^ 18) * (1500 * 10 ^ 5) / (0.2480 * 10 ^ 5*(100-15)/100))
+        await makeTransactionKYC(ico, signAddress, accounts[3], new BigNumber('1').mul(precision).valueOf())
+            .then(Utils.receiptShouldSucceed);
+
+        await Utils.checkEtherBalance(etherHolder, new BigNumber("1").mul(precision).add(etherHolderBalance).valueOf())
+        await ico.testChangeCollectedUSD(new BigNumber('5000000').mul(usdPrecision))
+        assert.equal(new BigNumber(await ico.collectedUSD.call()).valueOf(), new BigNumber('5000000').mul(usdPrecision).valueOf(), "collectedUSD is not equal");
+        await makeTransactionKYC(ico, signAddress, accounts[3], new BigNumber('1').mul(precision).valueOf())
+        await Utils.checkEtherBalance(etherHolder, new BigNumber("3").mul(precision).add(etherHolderBalance).valueOf())
+
+        await makeTransactionKYC(ico, signAddress, accounts[3], new BigNumber('1').mul(precision).valueOf())
+            .then(Utils.receiptShouldSucceed);
+        await Utils.checkState({ico, token}, {
+            token: {
+                totalSupply: new BigNumber('12096774193548387096774').add("7115749525616698292220").add("7115749525616698292220").add("7115749525616698292220").valueOf(),
+                balanceOf: [
+                    {[accounts[3]]:  new BigNumber('12096774193548387096774').add("7115749525616698292220").add("7115749525616698292220").add("7115749525616698292220").valueOf()},
+                ],
+            },
+            ico: {
+                token: token.address,
+                minPurchase: new BigNumber('10000000').valueOf(),
+                maxPurchase: new BigNumber('0').mul(precision).valueOf(),
+                softCap: new BigNumber('5000000').mul(usdPrecision).valueOf(),
+                hardCap: new BigNumber('50104779').mul(usdPrecision).valueOf(),
+                maxTokenSupply: new BigNumber('336000000000000000000000000').valueOf(),
+                startTime: start,
+                endTime: icoTill,
+                soldTokens: new BigNumber("7115749525616698292220").add("7115749525616698292220").add("7115749525616698292220").valueOf(),
+                collectedEthers: new BigNumber("3").mul(precision).valueOf(),
+                etherHolder: etherHolder,
+                collectedUSD: new BigNumber("500300000000").valueOf(),
+                etherBalances: [
+                    {[accounts[0]]: 0},
+                    {[accounts[1]]: 0},
+                    {[accounts[3]]: new BigNumber("3").mul(precision).valueOf()},
+                ],
+                allowedMultivests: [
+                    {[accounts[0]]: true},
+                    {[accounts[1]]: false},
+                ],
+            }
+        });
+
+        await Utils.checkEtherBalance(etherHolder, new BigNumber("4").mul(precision).add(etherHolderBalance).valueOf())
+    });
+
+    it("check calculateEthersAmount ", async function () {
+        const {token, ico, allocations} = await deploy();
+        await token.setCrowdSale(ico.address);
+        await Utils.checkState({ico, token}, {
+            ico: {
+                token: token.address,
+                minPurchase: new BigNumber('10000000').valueOf(),
+                maxPurchase: new BigNumber('0').mul(precision).valueOf(),
+                softCap: new BigNumber('5000000').mul(usdPrecision).valueOf(),
+                hardCap: new BigNumber('50104779').mul(usdPrecision).valueOf(),
+                maxTokenSupply: new BigNumber('336000000000000000000000000').valueOf(),
+                startTime: icoSince,
+                endTime: icoTill,
+                soldTokens: 0,
+                collectedEthers: 0,
+                etherHolder: etherHolder,
+                collectedUSD: 0,
+                etherBalances: [
+                    {[accounts[0]]: 0},
+                    {[accounts[1]]: 0},
+                ],
+                allowedMultivests: [
+                    {[accounts[0]]: true},
+                    {[accounts[1]]: false},
+                ],
+            }
+        });
+
+        let zal = await ico.calculateEthersAmount.call(0);
+        assert.equal(zal[0], 0, 'calculateEthersAmount is not equal');
+        assert.equal(zal[1], 0, 'calculateEthersAmount is not equal');
+        // (17281105990783410138248* (0.2480 * 10 ^ 5*(100-65)/100))/1500*10^5
+        zal = await ico.calculateEthersAmount.call(new BigNumber('17281105990783410138248').valueOf());
+        assert.equal(new BigNumber(zal[0]).valueOf(), new BigNumber('999999999999999999').valueOf(), 'TokensAmount is not equal');
+        assert.equal(new BigNumber(zal[1]).valueOf(), 149999999, 'USDAmount is not equal');
+
+
+        await ico.changeICODates(0, parseInt(new Date().getTime() / 1000 - 3600 * 2), parseInt(new Date().getTime() / 1000 - 3600));
+        await ico.changeICODates(1, parseInt(new Date().getTime() / 1000 - 3600), parseInt(new Date().getTime() / 1000 + 3600));
+        // (15120967741935483870967* (0.2480 * 10 ^ 5*(100-60)/100))/1500*10^5
+        zal = await ico.calculateEthersAmount.call(new BigNumber('15120967741935483870967').valueOf());
+        assert.equal(new BigNumber(zal[0]).valueOf(), new BigNumber('999999999999999999').valueOf(), 'TokensAmount is not equal');
+        assert.equal(new BigNumber(zal[1]).valueOf(), 149999999, 'USDAmount is not equal');
     });
 });
