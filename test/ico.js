@@ -733,6 +733,11 @@ contract('ICO', function (accounts) {
                     {[accounts[1]]: 0},
                     {[accounts[3]]: new BigNumber("3").mul(precision).valueOf()},
                 ],
+                icoBalances:[
+                    {[accounts[0]]: 0},
+                    {[accounts[1]]: 0},
+                    {[accounts[3]]: new BigNumber("7115749525616698292220").add("7115749525616698292220").add("7115749525616698292220").valueOf()},
+                ],
                 allowedMultivests: [
                     {[accounts[0]]: true},
                     {[accounts[1]]: false},
