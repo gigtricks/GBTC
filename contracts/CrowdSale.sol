@@ -211,7 +211,7 @@ contract CrowdSale is SellableToken {
         }
     }
 
-    function calculateEthersAmount(uint256 _tokens) public view returns (uint256 ethers, uint256 discount) {
+    function calculateEthersAmount(uint256 _tokens) public view returns (uint256 ethers, uint256 usdAmount) {
         if (_tokens == 0) {
             return (0, 0);
         }
@@ -227,15 +227,14 @@ contract CrowdSale is SellableToken {
             }
         }
 
-        ethers = _tokens.mul(price).div(etherPriceInUSD);
+        usdAmount = _tokens.mul((price * (100 - tiers[activeTier].discount) / 100));
+        ethers = usdAmount.div(etherPriceInUSD);
 
         if (ethers < getMinEthersInvestment()) {
             return (0, 0);
         }
 
-        uint256 usdAmount = ethers.mul(etherPriceInUSD);
-
-        discount = usdAmount.div(price * (100 - tiers[activeTier].discount) / 100) - _tokens;
+        usdAmount = usdAmount.div(uint256(10) ** 18);
     }
 
     function getStats(uint256 _ethPerBtc) public view returns (
@@ -364,14 +363,12 @@ contract CrowdSale is SellableToken {
         uint256 mintedAmount;
 
         (tokenAmount, usdAmount) = calculateTokensAmount(_value);
+        require(usdAmount > 0 && tokenAmount > 0);
 
         if (activeTier >= PRE_ICO_TIER_FIRST && activeTier <= PRE_ICO_TIER_LAST) {
             mintedAmount = mintPreICO(_address, tokenAmount, _value, usdAmount);
-
-            require(usdAmount > 0 && mintedAmount > 0);
             if (activeTier <= LOCK_BALANCES_TO) {
-                //@todo
-//                allocation.allocateToken(_address, mintedAmount, MONTH_IN_SEC, 1 years);
+                token.increaseLockedBalance(_address, mintedAmount);
             }
             etherHolder.transfer(this.balance);
         } else {
@@ -380,10 +377,10 @@ contract CrowdSale is SellableToken {
             collectedUSD = collectedUSD.add(usdAmount);
             require(hardCap >= collectedUSD.add(preICOStats.collectedUSD) && usdAmount > 0 && mintedAmount > 0);
 
-            transferEthers();
             collectedEthers = collectedEthers.add(_value);
             etherBalances[_address] = etherBalances[_address].add(_value);
             icoBalances[_address] = icoBalances[_address].add(tokenAmount);
+            transferEthers();
         }
 
         Contribution(_address, _value, tokenAmount);

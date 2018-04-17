@@ -260,19 +260,13 @@ contract('Allocation', function (accounts) {
         await token.transfer(vesting.address, 1000)
         assert.equal(new BigNumber(await vesting.vestedAmount(token.address)), 0, 'vestedAmount is not equal')
 
-
-
-
         await  allocation.createVesting(accounts[2], parseInt(new Date().getTime() / 1000) - 1, 0, 60, 2, true)
             .then(Utils.receiptShouldSucceed)
-
-         vesting = await PeriodicTokenVesting.at(await allocation.vestings.call(1)) //Address of the contract, obtained from Etherscan
+        vesting = await PeriodicTokenVesting.at(await allocation.vestings.call(1)) //Address of the contract, obtained from Etherscan
         await token.mint(accounts[0], 2000, {from: accounts[0]})
         await token.transfer(vesting.address, 100)
         assert.equal(new BigNumber(await vesting.vestedAmount(token.address)).valueOf(), 50, 'vestedAmount is not equal')
         await vesting.release(token.address);
-
-
 
         await  allocation.createVesting(accounts[3], parseInt(new Date().getTime() / 1000) - 31, 0, 30, 2, true)
             .then(Utils.receiptShouldSucceed)
@@ -291,12 +285,9 @@ contract('Allocation', function (accounts) {
         await token.transfer(vesting.address, 100)
         assert.equal(new BigNumber(await vesting.vestedAmount(token.address)).valueOf(), 66, 'vestedAmount is not equal')
         await vesting.release(token.address);
-
-
         await vesting.release(token.address)
-    .then(Utils.receiptShouldFailed)
+            .then(Utils.receiptShouldFailed)
             .catch(Utils.catchReceiptShouldFailed);
-
         Utils.balanceShouldEqualTo(token, accounts[4], 66)
 
         await  allocation.createVesting(accounts[5], parseInt(new Date().getTime() / 1000) - 90000, 0, 30, 2, true)
